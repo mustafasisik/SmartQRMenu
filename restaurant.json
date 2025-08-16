@@ -1,0 +1,216 @@
+{
+  "restaurant": {
+    "name": "Lezzet Durağı",
+    "tagline": "Geleneksel Lezzetler, Modern Sunum",
+    "description": "2010 yılından beri İstanbul'un kalbinde, geleneksel Türk mutfağının en seçkin lezzetlerini sunan premium restoran. Osmanlı mutfağından esinlenen tarifler ve çağdaş sunum teknikleriyle unutulmaz bir gastronomi deneyimi yaşatıyoruz.",
+    "address": {
+      "street": "Bağdat Caddesi No: 156",
+      "district": "Kadıköy",
+      "city": "İstanbul",
+      "postal_code": "34728",
+      "country": "Türkiye"
+    },
+    "contact": {
+      "phone": "+90 216 555 0123",
+      "email": "info@lezzetduragi.com",
+      "website": "www.lezzetduragi.com"
+    },
+    "hours": {
+      "monday": "12:00 - 23:00",
+      "tuesday": "12:00 - 23:00",
+      "wednesday": "12:00 - 23:00",
+      "thursday": "12:00 - 23:00",
+      "friday": "12:00 - 00:00",
+      "saturday": "12:00 - 00:00",
+      "sunday": "12:00 - 22:00"
+    },
+    "features": [
+      "Açık mutfak",
+      "Şarap mahzeni",
+      "Özel etkinlik salonu",
+      "Bahçe terası",
+      "Valet parking",
+      "WiFi"
+    ],
+    "awards": [
+      "2023 - İstanbul'un En İyi Restoranı (Gastronomi Dergisi)",
+      "2022 - Altın Çatal Ödülü",
+      "2021 - En İyi Geleneksel Mutfak (Şef Dergisi)"
+    ]
+  },
+  "chef": {
+    "name": "Mehmet Usta",
+    "title": "Baş Şef",
+    "experience": "25+ yıl",
+    "background": "İstanbul Gastronomi Akademisi mezunu olan Mehmet Usta, Fransa'da 8 yıl boyunca Michelin yıldızlı restoranlarda çalıştı. Geleneksel Türk mutfağını modern tekniklerle harmanlayarak kendine özgü bir tarz yarattı.",
+    "specialties": [
+      "Osmanlı mutfağı",
+      "Deniz ürünleri",
+      "Kuzu eti yemekleri",
+      "Tatlılar"
+    ],
+    "education": [
+      "İstanbul Gastronomi Akademisi - Şeflik",
+      "Le Cordon Bleu Paris - Pastacılık",
+      "Gordon Ramsay Restoranı - Staj"
+    ],
+    "achievements": [
+      "Türkiye'nin En İyi Şefi 2022",
+      "Uluslararası Şef Yarışması 1.lik",
+      "Gastronomi Sanatları Ödülü"
+    ]
+  },
+  "menu": {
+    "categories": [
+      {
+        "name": "Başlangıçlar",
+        "items": [
+          {
+            "name": "Mercimek Çorbası",
+            "description": "Geleneksel tarifle hazırlanan, kırmızı mercimek çorbası, nane ve limon ile",
+            "price": "45 TL",
+            "allergens": ["Gluten"],
+            "spice_level": "Hafif"
+          },
+          {
+            "name": "Humus",
+            "description": "Nohut püresi, tahin, zeytinyağı ve baharatlarla",
+            "price": "55 TL",
+            "allergens": ["Susam"],
+            "spice_level": "Hafif"
+          },
+          {
+            "name": "Sigara Böreği",
+            "description": "El açması yufka ile hazırlanan, beyaz peynirli sigara böreği",
+            "price": "65 TL",
+            "allergens": ["Gluten", "Süt"],
+            "spice_level": "Hafif"
+          }
+        ]
+      },
+      {
+        "name": "Ana Yemekler",
+        "items": [
+          {
+            "name": "Kuzu Pirzola",
+            "description": "Özel soslu marine edilmiş kuzu pirzola, patates püresi ve mevsim sebzeleri ile",
+            "price": "180 TL",
+            "allergens": ["Gluten"],
+            "spice_level": "Orta"
+          },
+          {
+            "name": "Levrek Izgara",
+            "description": "Taze levrek filetosu, limon sos, roka salatası ve pilav ile",
+            "price": "160 TL",
+            "allergens": ["Balık"],
+            "spice_level": "Hafif"
+          },
+          {
+            "name": "Mantı",
+            "description": "El açması hamur, kıyma harcı, yoğurt ve özel sos ile",
+            "price": "120 TL",
+            "allergens": ["Gluten", "Süt"],
+            "spice_level": "Orta"
+          }
+        ]
+      },
+      {
+        "name": "Tatlılar",
+        "items": [
+          {
+            "name": "Künefe",
+            "description": "Taze peynir, kadayıf ve şerbet ile hazırlanan geleneksel tatlı",
+            "price": "75 TL",
+            "allergens": ["Gluten", "Süt", "Fındık"],
+            "spice_level": "Tatlı"
+          },
+          {
+            "name": "Sütlaç",
+            "description": "Fırında pişirilmiş, üzeri kızarmış sütlaç",
+            "price": "60 TL",
+            "allergens": ["Süt"],
+            "spice_level": "Tatlı"
+          }
+        ]
+      },
+      {
+        "name": "İçecekler",
+        "items": [
+          {
+            "name": "Taze Sıkılmış Portakal Suyu",
+            "description": "Günlük taze sıkılmış portakal suyu",
+            "price": "35 TL",
+            "allergens": [],
+            "spice_level": "İçecek"
+          },
+          {
+            "name": "Türk Kahvesi",
+            "description": "Geleneksel yöntemle hazırlanan Türk kahvesi",
+            "price": "25 TL",
+            "allergens": [],
+            "spice_level": "İçecek"
+          }
+        ]
+      }
+    ]
+  },
+  "reviews": [
+    {
+      "customer_name": "Ayşe Yılmaz",
+      "rating": 5,
+      "date": "2024-01-15",
+      "comment": "Muhteşem bir deneyimdi! Mehmet Usta'nın kuzu pirzolası gerçekten unutulmaz. Servis çok hızlı ve personel çok nazik. Kesinlikle tekrar geleceğim.",
+      "dishes_tried": ["Kuzu Pirzola", "Künefe"]
+    },
+    {
+      "customer_name": "Mehmet Demir",
+      "rating": 5,
+      "date": "2024-01-12",
+      "comment": "İstanbul'da yediğim en iyi mantı. Hamuru çok ince ve harcı çok lezzetli. Fiyat-kalite oranı mükemmel. Çok teşekkürler!",
+      "dishes_tried": ["Mantı", "Mercimek Çorbası"]
+    },
+    {
+      "customer_name": "Fatma Kaya",
+      "rating": 4,
+      "date": "2024-01-10",
+      "comment": "Atmosfer çok güzel, yemekler lezzetli. Sadece biraz kalabalıktı ama bu da restoranın ne kadar popüler olduğunu gösteriyor. Künefe harikaydı!",
+      "dishes_tried": ["Levrek Izgara", "Künefe"]
+    },
+    {
+      "customer_name": "Ali Özkan",
+      "rating": 5,
+      "date": "2024-01-08",
+      "comment": "İş yemeği için geldik, çok memnun kaldık. Şef Mehmet Usta ile tanışma fırsatımız oldu, çok bilgili ve samimi. Yemekler restoranın itibarını hak ediyor.",
+      "dishes_tried": ["Kuzu Pirzola", "Humus", "Sütlaç"]
+    },
+    {
+      "customer_name": "Zeynep Arslan",
+      "rating": 4,
+      "date": "2024-01-05",
+      "comment": "Açık mutfak konsepti çok hoş, yemeklerin nasıl hazırlandığını görmek keyifli. Mercimek çorbası annemin yaptığı gibiydi. Çok nostaljik bir deneyim.",
+      "dishes_tried": ["Mercimek Çorbası", "Sigara Böreği"]
+    }
+  ],
+  "faq": [
+    {
+      "question": "Rezervasyon yapmak için ne kadar önceden haber vermeliyim?",
+      "answer": "Özellikle hafta sonları ve akşam saatleri için en az 2-3 gün önceden rezervasyon yapmanızı öneririz. Özel etkinlikler için 1 hafta önceden rezervasyon yapabilirsiniz."
+    },
+    {
+      "question": "Çocuk menüsü var mı?",
+      "answer": "Evet, 12 yaş altı çocuklar için özel menümüz bulunmaktadır. Çocuk menüsünde mantı, tavuk şinitzel ve sütlaç gibi seçenekler yer almaktadır."
+    },
+    {
+      "question": "Vegan seçenekler mevcut mu?",
+      "answer": "Evet, menümüzde vegan dostu birçok seçenek bulunmaktadır. Mercimek çorbası, humus ve mevsim sebzeleri gibi yemeklerimiz vegan menüye dahildir."
+    },
+    {
+      "question": "Özel diyet gereksinimleri için ne yapabilirim?",
+      "answer": "Alerji veya özel diyet gereksinimleriniz için rezervasyon sırasında belirtmeniz yeterlidir. Şefimiz size özel menü hazırlayacaktır."
+    },
+    {
+      "question": "Parking imkanı var mı?",
+      "answer": "Evet, restoranımızda ücretsiz valet parking hizmeti sunulmaktadır. Ayrıca yakın çevrede ücretli otopark seçenekleri de mevcuttur."
+    }
+  ]
+}

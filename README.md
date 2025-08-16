@@ -5,10 +5,13 @@ A simple Flask web application with a modern, responsive UI.
 ## Features
 
 - Clean, modern web interface
+- Restaurant information page with comprehensive details
+- Restaurant page with smart AI chatbot
 - Health check API endpoint
 - Hello API endpoint with POST support
 - Responsive design with gradient background
 - Interactive JavaScript functionality
+- Tailwind CSS for modern styling
 
 ## Setup
 
@@ -64,6 +67,8 @@ The `render.yaml` file is included for easy deployment configuration.
 ## API Endpoints
 
 - `GET /` - Main page
+- `GET /restaurant` - Restaurant page with smart AI chatbot
+- `GET /restaurant-info` - Restaurant information page (menu, reviews, details)
 - `GET /api/health` - Health check endpoint
 - `POST /api/hello` - Hello endpoint (accepts JSON with "name" field)
 
@@ -72,10 +77,19 @@ The `render.yaml` file is included for easy deployment configuration.
 ```
 SmartQRMenu/
 ├── app.py              # Main Flask application
+├── restaurant.json     # Restaurant data (Turkish content)
 ├── requirements.txt    # Python dependencies
 ├── README.md          # This file
 └── templates/         # HTML templates
-    └── index.html     # Main page template
+    ├── landing_base.html  # Base template with Tailwind CSS
+    ├── parts/             # Reusable components
+    │   ├── navbar.html    # Navigation component
+    │   ├── hero.html      # Hero section
+    │   └── why_choose_us.html # Features section
+    └── pages/             # Page templates
+        ├── home.html      # Home page
+        ├── restaurant.html # Restaurant page with AI chatbot
+        └── restaurant_info.html # Restaurant information page
 ```
 
 ## Development

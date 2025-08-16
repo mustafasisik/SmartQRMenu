@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartQRMenu - Digital Menu Solutions{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2',
+                        accent: '#f8f9fa'
+                    }
+                }
+            }
+        }
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="font-sans text-gray-800 leading-relaxed">
+    <!-- Navigation -->
+    {% include 'parts/navbar.html' %}
+    
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-8">
+        <p>&copy; 2024 SmartQRMenu. All rights reserved.</p>
+        <p class="mt-2 opacity-80">Built with ❤️ using Flask & Tailwind CSS</p>
+    </footer>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

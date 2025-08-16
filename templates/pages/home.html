@@ -1,0 +1,246 @@
+{% extends "landing_base.html" %}
+
+{% block title %}SmartQRMenu - Digital Menu Solutions{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    {% include 'parts/hero.html' %}
+    
+    <!-- Why Choose Us Section -->
+    {% include 'parts/why_choose_us.html' %}
+    
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                    Powerful Features for 
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                        Modern Restaurants
+                    </span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Everything you need to digitize your menu and enhance customer experience
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <!-- Feature Content -->
+                <div class="space-y-8">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">QR Code Generation</h3>
+                            <p class="text-gray-600">Create unique QR codes for each menu item, table, or special offer with our advanced generator.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Real-time Analytics</h3>
+                            <p class="text-gray-600">Track customer interactions, popular items, and peak ordering times with detailed insights.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-gray-900 mb-2">Customer Favorites</h3>
+                            <p class="text-gray-600">Let customers save their favorite items and get personalized recommendations.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Feature Image -->
+                <div class="relative">
+                    <div class="bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl p-8">
+                        <div class="bg-white rounded-2xl p-6 shadow-xl">
+                            <div class="space-y-4">
+                                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                                <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-gray-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-gray-500">Total Items</span>
+                                    <span class="text-lg font-semibold text-primary">24</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- API Testing Section -->
+    <section id="api" class="py-20 bg-accent">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                    API Testing & 
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                        Development
+                    </span>
+                </h2>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                    Test our API endpoints and integrate with your existing systems
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900">Health Check</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">Verify the API is running and responsive</p>
+                    <button onclick="checkHealth()" 
+                            class="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200">
+                        Check Health
+                    </button>
+                    <div id="healthResponse" class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg hidden">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span id="healthMessage" class="text-green-800 font-medium"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+                    <div class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900">Hello API</h3>
+                    </div>
+                    <p class="text-gray-600 mb-6">Test the greeting endpoint with custom names</p>
+                    <div class="space-y-4">
+                        <input type="text" id="nameInput" placeholder="Enter your name" 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <button onclick="sayHello()" 
+                                class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200">
+                            Say Hello
+                        </button>
+                    </div>
+                    <div id="helloResponse" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span id="helloMessage" class="text-blue-800 font-medium"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                Ready to Get 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                    Started?
+                </span>
+            </h2>
+            <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                Join thousands of restaurants already using SmartQRMenu to transform their customer experience
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#api" 
+                   class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-full text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
+                    Start Free Trial
+                    <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </a>
+                <a href="mailto:contact@smartqrmenu.com" 
+                   class="inline-flex items-center px-8 py-4 border-2 border-primary text-primary font-semibold rounded-full text-lg hover:bg-primary hover:text-white transition-all duration-300">
+                    Contact Sales
+                </a>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function checkHealth() {
+        try {
+            const response = await fetch('/api/health');
+            const data = await response.json();
+            const healthDiv = document.getElementById('healthResponse');
+            const healthMessage = document.getElementById('healthMessage');
+            
+            healthMessage.textContent = data.message;
+            healthDiv.classList.remove('hidden');
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+    
+    async function sayHello() {
+        const name = document.getElementById('nameInput').value || 'World';
+        try {
+            const response = await fetch('/api/hello', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: name })
+            });
+            const data = await response.json();
+            const helloDiv = document.getElementById('helloResponse');
+            const helloMessage = document.getElementById('helloMessage');
+            
+            helloMessage.textContent = data.message;
+            helloDiv.classList.remove('hidden');
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+    
+    // Check health on page load
+    window.onload = function() {
+        checkHealth();
+    };
+    
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

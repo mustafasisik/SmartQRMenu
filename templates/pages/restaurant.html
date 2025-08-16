@@ -1,0 +1,405 @@
+{% extends "landing_base.html" %}
+
+{% block title %}{{ data.restaurant.name }} - {{ data.restaurant.tagline }}{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative py-20 bg-gradient-to-br from-primary to-secondary">
+    <div class="absolute inset-0 bg-black/20"></div>
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+        <h1 class="text-5xl font-bold mb-4">{{ data.restaurant.name }}</h1>
+        <p class="text-2xl mb-8">{{ data.restaurant.tagline }}</p>
+        <p class="text-lg max-w-3xl mx-auto leading-relaxed">{{ data.restaurant.description }}</p>
+        
+        <!-- Quick Info Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-6">
+                <div class="text-3xl mb-2">📍</div>
+                <h3 class="font-semibold mb-2">Adres</h3>
+                <p class="text-sm">{{ data.restaurant.address.street }}, {{ data.restaurant.address.district }}</p>
+            </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-6">
+                <div class="text-3xl mb-2">📞</div>
+                <h3 class="font-semibold mb-2">İletişim</h3>
+                <p class="text-sm">{{ data.restaurant.contact.phone }}</p>
+            </div>
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-6">
+                <div class="text-3xl mb-2">🕒</div>
+                <h3 class="font-semibold mb-2">Çalışma Saatleri</h3>
+                <p class="text-sm">12:00 - 23:00</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Chef Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                Şefimiz 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                    {{ data.chef.name }}
+                </span>
+            </h2>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <div class="bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl p-8">
+                    <div class="text-center">
+                        <div class="w-32 h-32 bg-gradient-to-br from-primary to-secondary rounded-full mx-auto mb-6 flex items-center justify-center text-6xl text-white">
+                            👨‍🍳
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ data.chef.name }}</h3>
+                        <p class="text-lg text-primary font-semibold mb-4">{{ data.chef.title }}</p>
+                        <p class="text-gray-600 mb-6">{{ data.chef.background }}</p>
+                        
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2">Uzmanlık Alanları</h4>
+                                <ul class="text-gray-600 space-y-1">
+                                    {% for specialty in data.chef.specialties %}
+                                    <li>• {{ specialty }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-2">Başarılar</h4>
+                                <ul class="text-gray-600 space-y-1">
+                                    {% for achievement in data.chef.achievements %}
+                                    <li>• {{ achievement }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="space-y-6">
+                <h3 class="text-2xl font-bold text-gray-900">Eğitim & Deneyim</h3>
+                <div class="space-y-4">
+                    {% for education in data.chef.education %}
+                    <div class="flex items-start space-x-4">
+                        <div class="w-3 h-3 bg-primary rounded-full mt-2"></div>
+                        <p class="text-gray-700">{{ education }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="bg-accent rounded-lg p-6">
+                    <h4 class="font-semibold text-gray-900 mb-3">Deneyim</h4>
+                    <p class="text-2xl font-bold text-primary">{{ data.chef.experience }}</p>
+                    <p class="text-gray-600">Profesyonel mutfak deneyimi</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Menu Section -->
+<section class="py-20 bg-accent">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                Lezzetli 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                    Menümüz
+                </span>
+            </h2>
+            <p class="text-xl text-gray-600">Geleneksel lezzetler, modern sunum</p>
+        </div>
+        
+        <div class="space-y-12">
+            {% for category in data.menu.categories %}
+            <div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-8 text-center">{{ category.name }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for item in category['items'] %}
+                    <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <div class="flex justify-between items-start mb-4">
+                            <h4 class="text-xl font-semibold text-gray-900">{{ item.name }}</h4>
+                            <span class="text-lg font-bold text-primary">{{ item.price }}</span>
+                        </div>
+                        <p class="text-gray-600 mb-4">{{ item.description }}</p>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            {% if item.allergens %}
+                            <div class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                                Alerjen: {{ item.allergens|join(', ') }}
+                            </div>
+                            {% endif %}
+                            <div class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                {{ item.spice_level }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Reviews Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                Müşteri 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                    Yorumları
+                </span>
+            </h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for review in data.reviews %}
+            <div class="bg-accent rounded-2xl p-6 shadow-lg">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white font-bold text-lg mr-4">
+                        {{ review.customer_name[0] }}
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-900">{{ review.customer_name }}</h4>
+                        <div class="flex items-center">
+                            {% for i in range(review.rating) %}
+                            <span class="text-yellow-400">⭐</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <p class="text-gray-700 mb-4">{{ review.comment }}</p>
+                <div class="text-sm text-gray-500">
+                    <p>{{ review.date }}</p>
+                    <p class="mt-1">Denenen yemekler: {{ review.dishes_tried|join(', ') }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- AI Chatbot Section -->
+<section class="py-20 bg-gradient-to-br from-gray-900 to-gray-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-white mb-4">
+                AI Asistan ile 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                    Sohbet Edin
+                </span>
+            </h2>
+            <p class="text-xl text-gray-300">Restoran hakkında herhangi bir soru sorun, size yardımcı olayım!</p>
+        </div>
+        
+        <div class="bg-white rounded-2xl p-8 shadow-2xl">
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Örnek Sorular:</h3>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="askQuestion('Restoran nerede?')" 
+                            class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                        Restoran nerede?
+                    </button>
+                    <button onclick="askQuestion('Çalışma saatleri nedir?')" 
+                            class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                        Çalışma saatleri nedir?
+                    </button>
+                    <button onclick="askQuestion('Şef hakkında bilgi verir misiniz?')" 
+                            class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                        Şef hakkında bilgi verir misiniz?
+                    </button>
+                    <button onclick="askQuestion('Vegan seçenekler var mı?')" 
+                            class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                        Vegan seçenekler var mı?
+                    </button>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="flex space-x-4">
+                    <input type="text" id="questionInput" placeholder="Restoran hakkında bir soru sorun..." 
+                           class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <button onclick="sendQuestion()" 
+                            class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300">
+                        Gönder
+                    </button>
+                </div>
+                
+                <div id="chatHistory" class="space-y-4 max-h-96 overflow-y-auto">
+                    <!-- Chat messages will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact & Hours Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Contact Info -->
+            <div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-8">İletişim Bilgileri</h3>
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">📍</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">Adres</h4>
+                            <p class="text-gray-600">{{ data.restaurant.address.street }}<br>{{ data.restaurant.address.district }}, {{ data.restaurant.address.city }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">📞</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">Telefon</h4>
+                            <p class="text-gray-600">{{ data.restaurant.contact.phone }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">✉️</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">E-posta</h4>
+                            <p class="text-gray-600">{{ data.restaurant.contact.email }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Working Hours -->
+            <div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-8">Çalışma Saatleri</h3>
+                <div class="bg-accent rounded-2xl p-6">
+                    <div class="space-y-4">
+                        {% for day, hours in data.restaurant.hours.items() %}
+                        <div class="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
+                            <span class="font-medium text-gray-900 capitalize">{{ day }}</span>
+                            <span class="text-gray-600">{{ hours }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Features -->
+                <div class="mt-8">
+                    <h4 class="font-semibold text-gray-900 mb-4">Özellikler</h4>
+                    <div class="grid grid-cols-2 gap-2">
+                        {% for feature in data.restaurant.features %}
+                        <div class="flex items-center space-x-2">
+                            <span class="text-green-500">✓</span>
+                            <span class="text-gray-600 text-sm">{{ feature }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function askQuestion(question) {
+        document.getElementById('questionInput').value = question;
+        sendQuestion();
+    }
+    
+    function sendQuestion() {
+        const questionInput = document.getElementById('questionInput');
+        const question = questionInput.value.trim();
+        
+        if (!question) return;
+        
+        // Add user question to chat
+        addMessage('user', question);
+        questionInput.value = '';
+        
+        // Show loading
+        addMessage('assistant', 'Düşünüyorum...', true);
+        
+        // Send to API
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ question: question })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove loading message
+            removeLastMessage();
+            
+            if (data.error) {
+                addMessage('assistant', 'Üzgünüm, bir hata oluştu: ' + data.error);
+            } else {
+                addMessage('assistant', data.answer);
+            }
+        })
+        .catch(error => {
+            removeLastMessage();
+            addMessage('assistant', 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.');
+        });
+    }
+    
+    function addMessage(sender, message, isLoading = false) {
+        const chatHistory = document.getElementById('chatHistory');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+        
+        const messageBubble = document.createElement('div');
+        messageBubble.className = `max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+            sender === 'user' 
+                ? 'bg-primary text-white' 
+                : 'bg-gray-100 text-gray-800'
+        }`;
+        
+        if (isLoading) {
+            messageBubble.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                    <span>${message}</span>
+                </div>
+            `;
+        } else {
+            messageBubble.textContent = message;
+        }
+        
+        messageDiv.appendChild(messageBubble);
+        chatHistory.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+    
+    function removeLastMessage() {
+        const chatHistory = document.getElementById('chatHistory');
+        if (chatHistory.lastChild) {
+            chatHistory.removeChild(chatHistory.lastChild);
+        }
+    }
+    
+    // Enter key to send message
+    document.getElementById('questionInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendQuestion();
+        }
+    });
+    
+    // Welcome message
+    window.onload = function() {
+        addMessage('assistant', 'Merhaba! Ben Lezzet Durağı\'nın AI asistanıyım. Restoran hakkında herhangi bir soru sorabilirsiniz!');
+    };
+</script>
+{% endblock %}

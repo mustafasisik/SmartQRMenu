@@ -16,8 +16,13 @@ A simple Flask web application with a modern, responsive UI.
 ## Setup
 
 ### Prerequisites
-- Python 3.7 or higher
+- Python 3.11 or higher (recommended)
 - pip (Python package installer)
+
+### Dependency Notes
+- All dependencies are configured with compatible version ranges
+- Flask 3.1+ with blinker 1.9+ for proper functionality
+- Gunicorn for production deployment
 
 ### Installation
 
@@ -59,10 +64,13 @@ A simple Flask web application with a modern, responsive UI.
 4. **Use the following settings:**
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `gunicorn app:app`
-   - **Environment:** Python 3.9
+   - **Environment:** Python 3.11
 5. **Deploy!**
 
-The `render.yaml` file is included for easy deployment configuration.
+**Deployment Files Included:**
+- `render.yaml` - Automatic deployment configuration
+- `Procfile` - Alternative deployment method
+- `requirements.txt` - Compatible dependency versions
 
 ## API Endpoints
 

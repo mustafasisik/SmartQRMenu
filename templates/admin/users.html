@@ -1,0 +1,293 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Kullanıcı Yönetimi - Admin Panel{% endblock %}
+
+{% block page_title %}Kullanıcı Yönetimi{% endblock %}
+{% block page_subtitle %}Sistem kullanıcılarını görüntüle ve yönet{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-900">Kullanıcı Listesi</h2>
+            <p class="text-sm text-gray-600">Toplam <span id="user-count" class="font-medium">0</span> kullanıcı</p>
+        </div>
+        <button id="refresh-users" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            <span>Yenile</span>
+        </button>
+    </div>
+    
+    <!-- Users Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Kullanıcı
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Rol
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Durum
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            İşlemler
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Users will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="users-loading" class="p-8 text-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p class="mt-2 text-sm text-gray-600">Kullanıcılar yükleniyor...</p>
+        </div>
+        
+        <!-- Empty State -->
+        <div id="users-empty" class="p-8 text-center hidden">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Kullanıcı bulunamadı</h3>
+            <p class="mt-1 text-sm text-gray-500">Henüz hiç kullanıcı kaydolmadı.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Role Update Modal -->
+<div id="role-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Kullanıcı Rolünü Güncelle</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Kullanıcı</label>
+                    <p id="modal-user-info" class="text-sm text-gray-600"></p>
+                </div>
+                <div>
+                    <label for="role-select" class="block text-sm font-medium text-gray-700 mb-2">Yeni Rol</label>
+                    <select id="role-select" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="subscriber">Subscriber</option>
+                        <option value="owner">Owner</option>
+                        <option value="editor">Editor</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="flex space-x-3">
+                    <button id="update-role-btn" class="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md transition-colors">
+                        Güncelle
+                    </button>
+                    <button id="cancel-role-btn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors">
+                        İptal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentUsers = [];
+let currentEditingUser = null;
+
+// Load users on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadUsers();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // Refresh button
+    document.getElementById('refresh-users').addEventListener('click', loadUsers);
+    
+    // Modal buttons
+    document.getElementById('update-role-btn').addEventListener('click', updateUserRole);
+    document.getElementById('cancel-role-btn').addEventListener('click', closeRoleModal);
+    
+    // Close modal when clicking outside
+    document.getElementById('role-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeRoleModal();
+        }
+    });
+}
+
+async function loadUsers() {
+    try {
+        showLoading(true);
+        
+        const response = await fetch('/api/admin/users');
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+        
+        const data = await response.json();
+        currentUsers = data;
+        
+        displayUsers(data);
+        showLoading(false);
+        
+    } catch (error) {
+        console.error('Error loading users:', error);
+        showError('Kullanıcılar yüklenirken hata oluştu');
+        showLoading(false);
+    }
+}
+
+function displayUsers(users) {
+    const tableBody = document.getElementById('users-table-body');
+    const userCount = document.getElementById('user-count');
+    const emptyState = document.getElementById('users-empty');
+    
+    userCount.textContent = users.length;
+    
+    if (users.length === 0) {
+        tableBody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+    
+    emptyState.classList.add('hidden');
+    
+    tableBody.innerHTML = users.map(user => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10">
+                        <img class="h-10 w-10 rounded-full" src="${user.photo_url || '/static/images/default-avatar.svg'}" alt="">
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">${user.display_name || 'İsimsiz'}</div>
+                        <div class="text-sm text-gray-500">${user.uid}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">${user.email || 'N/A'}</div>
+                <div class="text-sm text-gray-500">
+                    ${user.email_verified ? '✓ Doğrulanmış' : '✗ Doğrulanmamış'}
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleBadgeClass(user.role)}">
+                    ${getRoleDisplayName(user.role)}
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                    Aktif
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button onclick="openRoleModal('${user.uid}', '${user.display_name || user.email || 'Kullanıcı'}', '${user.role}')" 
+                        class="text-primary hover:text-primary/80 transition-colors">
+                    Rol Değiştir
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getRoleBadgeClass(role) {
+    const classes = {
+        'admin': 'bg-red-100 text-red-800',
+        'editor': 'bg-blue-100 text-blue-800',
+        'owner': 'bg-green-100 text-green-800',
+        'subscriber': 'bg-gray-100 text-gray-800'
+    };
+    return classes[role] || classes['subscriber'];
+}
+
+function getRoleDisplayName(role) {
+    const names = {
+        'admin': 'Admin',
+        'editor': 'Editör',
+        'owner': 'Sahip',
+        'subscriber': 'Abone'
+    };
+    return names[role] || 'Abone';
+}
+
+function openRoleModal(uid, userName, currentRole) {
+    currentEditingUser = uid;
+    
+    document.getElementById('modal-user-info').textContent = userName;
+    document.getElementById('role-select').value = currentRole;
+    document.getElementById('role-modal').classList.remove('hidden');
+}
+
+function closeRoleModal() {
+    document.getElementById('role-modal').classList.add('hidden');
+    currentEditingUser = null;
+}
+
+async function updateUserRole() {
+    if (!currentEditingUser) return;
+    
+    const newRole = document.getElementById('role-select').value;
+    
+    try {
+        const response = await fetch(`/api/admin/users/${currentEditingUser}/role`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ role: newRole })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to update user role');
+        }
+        
+        const data = await response.json();
+        showSuccess('Kullanıcı rolü başarıyla güncellendi');
+        
+        // Refresh users list
+        loadUsers();
+        closeRoleModal();
+        
+    } catch (error) {
+        console.error('Error updating user role:', error);
+        showError('Rol güncellenirken hata oluştu');
+    }
+}
+
+function showLoading(show) {
+    const loading = document.getElementById('users-loading');
+    const tableBody = document.getElementById('users-table-body');
+    
+    if (show) {
+        loading.classList.remove('hidden');
+        tableBody.classList.add('hidden');
+    } else {
+        loading.classList.add('hidden');
+        tableBody.classList.remove('hidden');
+    }
+}
+
+function showSuccess(message) {
+    // Simple success notification
+    alert(message);
+}
+
+function showError(message) {
+    // Simple error notification
+    alert('Hata: ' + message);
+}
+</script>
+{% endblock %}

@@ -15,9 +15,6 @@
                     <a href="/restaurant" class="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                         Restaurant
                     </a>
-                    <a href="/restaurant-info" class="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
-                        Restaurant Info
-                    </a>
                     <a href="#features" class="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                         Features
                     </a>
@@ -30,6 +27,87 @@
                     <a href="#contact" class="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                         Contact
                     </a>
+                    
+                    <!-- Authentication Links (hidden by default) -->
+                    <div id="auth-links" class="hidden flex items-center space-x-4">
+                        <a href="/login" class="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                            Giriş Yap
+                        </a>
+                        <a href="/register" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                            Kayıt Ol
+                        </a>
+                    </div>
+                    
+                    <!-- Loading State (shown by default) -->
+                    <div id="navbar-loading" class="flex items-center space-x-4">
+                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                        <span class="text-gray-500 text-sm">Yükleniyor...</span>
+                    </div>
+                    
+                    <!-- User Menu (hidden by default) -->
+                    <div id="user-menu" class="hidden flex items-center space-x-4">
+                        <!-- User Profile Section -->
+                        <div class="flex items-center space-x-3">
+                            <!-- Profile Picture -->
+                            <div class="relative">
+                                <img id="user-avatar" src="/static/images/default-avatar.svg" 
+                                     alt="Profil Fotoğrafı" 
+                                     class="w-8 h-8 rounded-full border-2 border-gray-200 object-cover">
+                                <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 border-2 border-white rounded-full"></div>
+                            </div>
+                            
+                            <!-- User Info -->
+                            <div class="flex flex-col">
+                                <span id="user-name" class="text-gray-900 text-sm font-semibold"></span>
+                                <span id="user-email" class="text-gray-500 text-xs"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="relative">
+                            <button id="user-menu-button" class="flex items-center text-gray-700 hover:text-primary p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Dropdown Content -->
+                            <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                                <a href="/profile" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    Profil
+                                </a>
+                                <a href="/restaurant" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                    </svg>
+                                    AI Chat
+                                </a>
+                                <a href="/admin" id="admin-panel-link" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 hidden">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Admin Panel
+                                </a>
+                                <a href="/editor" id="editor-panel-link" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 hidden">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Editör Paneli
+                                </a>
+                                <div class="border-t border-gray-200 my-1"></div>
+                                <button id="logout-btn" class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Çıkış Yap
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -71,6 +149,71 @@
             <a href="#contact" class="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">
                 Contact
             </a>
+            
+            <!-- Mobile Authentication Links (hidden by default) -->
+            <div id="mobile-auth-links" class="hidden pt-4 border-t border-gray-200">
+                <a href="/login" class="text-gray-700 hover:text-primary block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">
+                    Giriş Yap
+                </a>
+                <a href="/register" class="bg-primary hover:bg-primary-dark text-white block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200">
+                    Kayıt Ol
+                </a>
+            </div>
+            
+            <!-- Mobile Loading State (shown by default) -->
+            <div id="mobile-navbar-loading" class="pt-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3 px-3 py-2">
+                    <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                    <span class="text-gray-500 text-sm">Yükleniyor...</span>
+                </div>
+            </div>
+            
+            <!-- Mobile User Menu (hidden by default) -->
+            <div id="mobile-user-menu" class="hidden pt-4 border-t border-gray-200">
+                <!-- Mobile User Profile -->
+                <div class="flex items-center space-x-3 px-3 py-2 mb-3">
+                    <img id="mobile-user-avatar" src="/static/images/default-avatar.svg" 
+                         alt="Profil Fotoğrafı" 
+                         class="w-10 h-10 rounded-full border-2 border-gray-200 object-cover">
+                    <div class="flex flex-col">
+                        <span id="mobile-user-name" class="text-gray-900 text-base font-semibold"></span>
+                        <span id="mobile-user-email" class="text-gray-500 text-sm"></span>
+                    </div>
+                </div>
+                
+                <a href="/profile" class="flex items-center px-3 py-2 text-base text-gray-700 hover:text-primary transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Profil
+                </a>
+                <a href="/restaurant" class="flex items-center px-3 py-2 text-base text-gray-700 hover:text-primary transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                    AI Chat
+                </a>
+                <a href="/admin" id="mobile-admin-panel-link" class="flex items-center px-3 py-2 text-base text-gray-700 hover:text-primary transition-colors duration-200 hidden">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    Admin Panel
+                </a>
+                <a href="/editor" id="mobile-editor-panel-link" class="flex items-center px-3 py-2 text-base text-gray-700 hover:text-primary transition-colors duration-200 hidden">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                    Editör Paneli
+                </a>
+                <div class="border-t border-gray-200 my-2"></div>
+                <button id="mobile-logout-btn" class="flex items-center w-full px-3 py-2 text-base text-red-600 hover:text-red-700 transition-colors duration-200">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    Çıkış Yap
+                </button>
+            </div>
         </div>
     </div>
 </nav>
@@ -92,5 +235,230 @@
                 mobileMenu.classList.add('hidden');
             });
         });
+        
+            // Check authentication status and update UI (only once)
+    checkAuthStatus();
     });
+    
+    // Check authentication status
+    async function checkAuthStatus() {
+        try {
+            console.log('Navbar: Checking auth status...');
+            
+            // Check if DOM elements exist
+            const authLinks = document.getElementById('auth-links');
+            const userMenu = document.getElementById('user-menu');
+            const mobileAuthLinks = document.getElementById('mobile-auth-links');
+            const mobileUserMenu = document.getElementById('mobile-user-menu');
+            
+            console.log('Navbar: DOM elements check:', {
+                authLinks: !!authLinks,
+                userMenu: !!userMenu,
+                mobileAuthLinks: !!mobileAuthLinks,
+                mobileUserMenu: !!mobileUserMenu
+            });
+            
+            const response = await fetch('/api/auth/status');
+            const data = await response.json();
+            
+            console.log('Navbar: Auth status response:', data);
+            
+            if (data.authenticated && data.user) {
+                console.log('Navbar: User is authenticated:', data.user);
+                showUserMenu(data.user);
+            } else {
+                console.log('Navbar: User is not authenticated');
+                showAuthLinks();
+            }
+        } catch (error) {
+            console.error('Navbar: Auth status check failed:', error);
+            showAuthLinks();
+        }
+    }
+    
+    // Show user menu when authenticated
+    function showUserMenu(user) {
+        console.log('Navbar: showUserMenu called with user:', user);
+        
+        try {
+            // Get all required elements
+            const navbarLoading = document.getElementById('navbar-loading');
+            const mobileNavbarLoading = document.getElementById('mobile-navbar-loading');
+            const authLinks = document.getElementById('auth-links');
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+            const userEmail = document.getElementById('user-email');
+            const userAvatar = document.getElementById('user-avatar');
+            const mobileAuthLinks = document.getElementById('mobile-auth-links');
+            const mobileUserMenu = document.getElementById('mobile-user-menu');
+            const mobileUserName = document.getElementById('mobile-user-name');
+            const mobileUserEmail = document.getElementById('mobile-user-email');
+            const mobileUserAvatar = document.getElementById('mobile-user-avatar');
+            
+            console.log('Navbar: Elements found:', {
+                navbarLoading: !!navbarLoading,
+                mobileNavbarLoading: !!mobileNavbarLoading,
+                authLinks: !!authLinks,
+                userMenu: !!userMenu,
+                userName: !!userName,
+                userEmail: !!userEmail,
+                userAvatar: !!userAvatar,
+                mobileAuthLinks: !!mobileAuthLinks,
+                mobileUserMenu: !!mobileUserMenu,
+                mobileUserName: !!mobileUserName,
+                mobileUserEmail: !!mobileUserEmail,
+                mobileUserAvatar: !!mobileUserAvatar
+            });
+            
+            if (!navbarLoading || !mobileNavbarLoading || !authLinks || !userMenu || !userName || !userEmail || !userAvatar) {
+                throw new Error('Required desktop elements not found');
+            }
+            
+            if (!mobileAuthLinks || !mobileUserMenu || !mobileUserName || !mobileUserEmail || !mobileUserAvatar) {
+                throw new Error('Required mobile elements not found');
+            }
+            
+            // Hide loading states
+            navbarLoading.classList.add('hidden');
+            mobileNavbarLoading.classList.add('hidden');
+            
+            // Desktop
+            authLinks.classList.add('hidden');
+            userMenu.classList.remove('hidden');
+            
+            // Update user info
+            const displayName = user.display_name || user.email || 'Kullanıcı';
+            const email = user.email || '';
+            const photoUrl = user.photo_url || '/static/images/default-avatar.svg';
+            
+            console.log('Navbar: Setting user info - Name:', displayName, 'Email:', email, 'Photo:', photoUrl);
+            
+            userName.textContent = displayName;
+            userEmail.textContent = email;
+            userAvatar.src = photoUrl;
+            
+            // Mobile
+            mobileAuthLinks.classList.add('hidden');
+            mobileUserMenu.classList.remove('hidden');
+            mobileUserName.textContent = displayName;
+            mobileUserEmail.textContent = email;
+            mobileUserAvatar.src = photoUrl;
+            
+            // Add logout functionality
+            document.getElementById('logout-btn').addEventListener('click', logout);
+            document.getElementById('mobile-logout-btn').addEventListener('click', logout);
+            
+            // Show/hide admin panel link based on user role
+            const adminPanelLink = document.getElementById('admin-panel-link');
+            const mobileAdminPanelLink = document.getElementById('mobile-admin-panel-link');
+            
+            if (user.role === 'admin') {
+                if (adminPanelLink) adminPanelLink.classList.remove('hidden');
+                if (mobileAdminPanelLink) mobileAdminPanelLink.classList.remove('hidden');
+                console.log('Navbar: Admin panel link shown for admin user');
+            } else {
+                if (adminPanelLink) adminPanelLink.classList.add('hidden');
+                if (mobileAdminPanelLink) mobileAdminPanelLink.classList.add('hidden');
+                console.log('Navbar: Admin panel link hidden for non-admin user');
+            }
+            
+            // Show/hide editor panel link based on user role
+            const editorPanelLink = document.getElementById('editor-panel-link');
+            const mobileEditorPanelLink = document.getElementById('mobile-editor-panel-link');
+            
+            if (user.role in ['editor', 'admin']) {
+                if (editorPanelLink) editorPanelLink.classList.remove('hidden');
+                if (mobileEditorPanelLink) mobileEditorPanelLink.classList.remove('hidden');
+                console.log('Navbar: Editor panel link shown for editor/admin user');
+            } else {
+                if (editorPanelLink) editorPanelLink.classList.add('hidden');
+                if (mobileEditorPanelLink) mobileEditorPanelLink.classList.add('hidden');
+                console.log('Navbar: Editor panel link hidden for non-editor user');
+            }
+            
+            // Add dropdown toggle functionality
+            setupDropdownToggle();
+            
+            console.log('Navbar: User menu shown successfully');
+        } catch (error) {
+            console.error('Navbar: Error showing user menu:', error);
+            console.error('Navbar: Error details:', error.message);
+        }
+    }
+    
+    // Setup dropdown toggle functionality
+    function setupDropdownToggle() {
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userDropdown = document.getElementById('user-dropdown');
+        
+        userMenuButton.addEventListener('click', function() {
+            userDropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Show authentication links when not authenticated
+    function showAuthLinks() {
+        console.log('Navbar: showAuthLinks called');
+        
+        try {
+            // Get all required elements
+            const navbarLoading = document.getElementById('navbar-loading');
+            const mobileNavbarLoading = document.getElementById('mobile-navbar-loading');
+            const authLinks = document.getElementById('auth-links');
+            const userMenu = document.getElementById('user-menu');
+            const mobileAuthLinks = document.getElementById('mobile-auth-links');
+            const mobileUserMenu = document.getElementById('mobile-user-menu');
+            
+            console.log('Navbar: Auth links elements found:', {
+                navbarLoading: !!navbarLoading,
+                mobileNavbarLoading: !!mobileNavbarLoading,
+                authLinks: !!authLinks,
+                userMenu: !!userMenu,
+                mobileAuthLinks: !!mobileAuthLinks,
+                mobileUserMenu: !!mobileUserMenu
+            });
+            
+            if (!navbarLoading || !mobileNavbarLoading || !authLinks || !userMenu || !mobileAuthLinks || !mobileUserMenu) {
+                throw new Error('Required auth elements not found');
+            }
+            
+            // Hide loading states
+            navbarLoading.classList.add('hidden');
+            mobileNavbarLoading.classList.add('hidden');
+            
+            // Desktop
+            authLinks.classList.remove('hidden');
+            userMenu.classList.add('hidden');
+            
+            // Mobile
+            mobileAuthLinks.classList.remove('hidden');
+            mobileUserMenu.classList.add('hidden');
+            
+            console.log('Navbar: Auth links shown successfully');
+        } catch (error) {
+            console.error('Navbar: Error showing auth links:', error);
+            console.error('Navbar: Error details:', error.message);
+        }
+    }
+    
+    // Logout function
+    async function logout() {
+        try {
+            await fetch('/logout');
+            window.location.href = '/';
+        } catch (error) {
+            console.error('Logout failed:', error);
+            window.location.href = '/';
+        }
+    }
+    
+    // Make checkAuthStatus globally accessible
+    window.checkAuthStatus = checkAuthStatus;
 </script>

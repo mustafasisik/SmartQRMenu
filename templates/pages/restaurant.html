@@ -185,51 +185,99 @@
 <!-- AI Chatbot Section -->
 <section class="py-20 bg-gradient-to-br from-gray-900 to-gray-800">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold text-white mb-4">
-                AI Asistan ile 
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                    Sohbet Edin
-                </span>
-            </h2>
-            <p class="text-xl text-gray-300">Restoran hakkında herhangi bir soru sorun, size yardımcı olayım!</p>
-        </div>
-        
-        <div class="bg-white rounded-2xl p-8 shadow-2xl">
-            <div class="mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Örnek Sorular:</h3>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="askQuestion('Restoran nerede?')" 
-                            class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
-                        Restoran nerede?
-                    </button>
-                    <button onclick="askQuestion('Çalışma saatleri nedir?')" 
-                            class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
-                        Çalışma saatleri nedir?
-                    </button>
-                    <button onclick="askQuestion('Şef hakkında bilgi verir misiniz?')" 
-                            class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
-                        Şef hakkında bilgi verir misiniz?
-                    </button>
-                    <button onclick="askQuestion('Vegan seçenekler var mı?')" 
-                            class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
-                        Vegan seçenekler var mı?
-                    </button>
-                </div>
-            </div>
-            
-            <div class="space-y-4">
-                <div class="flex space-x-4">
-                    <input type="text" id="questionInput" placeholder="Restoran hakkında bir soru sorun..." 
-                           class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                    <button onclick="sendQuestion()" 
-                            class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300">
-                        Gönder
-                    </button>
+                    <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold text-white mb-4">
+                    AI Asistan ile 
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                        Sohbet Edin
+                    </span>
+                </h2>
+                <p class="text-xl text-gray-300">Restoran hakkında herhangi bir soru sorun, size yardımcı olayım!</p>
+                
+                <!-- Authentication Required Notice -->
+                <div id="auth-notice" class="mt-6 bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4 max-w-md mx-auto">
+                    <div class="flex items-center justify-center space-x-2 text-yellow-300">
+                        <span>🔒</span>
+                        <span class="text-sm">AI asistanı kullanmak için giriş yapmanız gerekiyor</span>
+                    </div>
+                    <div class="mt-3 flex justify-center space-x-3">
+                        <a href="/login" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            Giriş Yap
+                        </a>
+                        <a href="/register" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                            Kayıt Ol
+                        </a>
+                    </div>
                 </div>
                 
-                <div id="chatHistory" class="space-y-4 max-h-96 overflow-y-auto">
-                    <!-- Chat messages will appear here -->
+                <!-- AI Status Indicator -->
+                <div id="aiStatus" class="mt-4 inline-flex items-center px-4 py-2 rounded-full text-sm font-medium">
+                    <div class="w-2 h-2 rounded-full mr-2 bg-yellow-400"></div>
+                    <span>AI Durumu kontrol ediliyor...</span>
+                </div>
+            </div>
+        
+        <div id="chatContainer" class="hidden">
+            <div class="bg-white rounded-2xl p-8 shadow-2xl">
+                <!-- Usage Statistics -->
+                <div id="usageStats" class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <h4 class="font-semibold text-blue-900 mb-3">📊 Kullanım İstatistikleri</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-blue-700">Günlük:</span>
+                            <span id="dailyUsage" class="font-medium text-blue-900">0/10</span>
+                        </div>
+                        <div>
+                            <span class="text-blue-700">Restoran:</span>
+                            <span id="restaurantUsage" class="font-medium text-blue-900">0/5</span>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-blue-600">
+                        💡 Her gün 10 mesaj, her restoran için 5 mesaj hakkınız var
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Örnek Sorular:</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="askQuestion('Restoran nerede?')" 
+                                class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                            Restoran nerede?
+                        </button>
+                        <button onclick="askQuestion('Çalışma saatleri nedir?')" 
+                                class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                            Çalışma saatleri nedir?
+                        </button>
+                        <button onclick="askQuestion('Şef hakkında bilgi verir misiniz?')" 
+                                class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                            Şef hakkında bilgi verir misiniz?
+                        </button>
+                        <button onclick="askQuestion('Vegan seçenekler var mı?')" 
+                                class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                            Vegan seçenekler var mı?
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="flex space-x-4">
+                        <div class="flex-1 relative">
+                            <input type="text" id="questionInput" placeholder="Restoran hakkında bir soru sorun... (max 150 karakter)" 
+                                   maxlength="150"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <div class="absolute right-2 top-2 text-xs text-gray-400">
+                                <span id="charCount">0</span>/150
+                            </div>
+                        </div>
+                        <button onclick="sendQuestion()" 
+                                class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300">
+                            Gönder
+                        </button>
+                    </div>
+                    
+                    <div id="chatHistory" class="space-y-4 max-h-96 overflow-y-auto">
+                        <!-- Chat messages will appear here -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -321,9 +369,16 @@
         
         if (!question) return;
         
+        // Check character limit
+        if (question.length > 150) {
+            addMessage('assistant', 'Soru çok uzun. Maksimum 150 karakter kullanabilirsiniz.');
+            return;
+        }
+        
         // Add user question to chat
         addMessage('user', question);
         questionInput.value = '';
+        document.getElementById('charCount').textContent = '0'; // Reset character counter
         
         // Show loading
         addMessage('assistant', 'Düşünüyorum...', true);
@@ -343,8 +398,18 @@
             
             if (data.error) {
                 addMessage('assistant', 'Üzgünüm, bir hata oluştu: ' + data.error);
+                
+                // If it's a limit error, show usage stats
+                if (data.limits) {
+                    updateUsageDisplay(data.limits);
+                }
             } else {
                 addMessage('assistant', data.answer);
+                
+                // Update usage stats if provided
+                if (data.usage_stats) {
+                    updateUsageDisplay(data.usage_stats);
+                }
             }
         })
         .catch(error => {
@@ -397,9 +462,216 @@
         }
     });
     
-    // Welcome message
+    // Check authentication status
+    async function checkAuthStatus() {
+        try {
+            console.log('Restaurant page: Checking auth status...');
+            const response = await fetch('/api/auth/status');
+            const data = await response.json();
+            
+            console.log('Restaurant page: Auth status response:', data);
+            
+            if (data.authenticated) {
+                // User is authenticated, show AI chatbot
+                console.log('Restaurant page: User authenticated, showing chatbot');
+                document.getElementById('auth-notice').classList.add('hidden');
+                document.getElementById('chatContainer').classList.remove('hidden');
+                checkAIStatus();
+                loadUsageStats(); // Load usage statistics
+                addMessage('assistant', 'Merhaba! Ben Lezzet Durağı\'nın AI asistanıyım. Restoran hakkında herhangi bir soru sorabilirsiniz!');
+                
+                // Update navbar to show user info
+                updateNavbar(data.user);
+            } else {
+                // User is not authenticated, hide AI chatbot
+                console.log('Restaurant page: User not authenticated, showing auth notice');
+                document.getElementById('auth-notice').classList.remove('hidden');
+                document.getElementById('chatContainer').classList.add('hidden');
+                checkAIStatus(); // Still check AI status for display
+                
+                // Update navbar to show auth links
+                updateNavbar(null);
+            }
+        } catch (error) {
+            console.error('Restaurant page: Auth status check failed:', error);
+            // Show auth notice on error
+            document.getElementById('auth-notice').classList.remove('hidden');
+            document.getElementById('chatContainer').classList.add('hidden');
+            
+            // Update navbar to show auth links on error
+            updateNavbar(null);
+        }
+    }
+    
+    // Update navbar based on authentication status
+    function updateNavbar(user) {
+        try {
+            console.log('Restaurant page: Updating navbar with user:', user);
+            
+            // Get loading state elements
+            const navbarLoading = document.getElementById('navbar-loading');
+            const mobileNavbarLoading = document.getElementById('mobile-navbar-loading');
+            
+            if (user) {
+                // User is authenticated, show user menu
+                const authLinks = document.getElementById('auth-links');
+                const userMenu = document.getElementById('user-menu');
+                const mobileAuthLinks = document.getElementById('mobile-auth-links');
+                const mobileUserMenu = document.getElementById('mobile-user-menu');
+                
+                if (authLinks && userMenu && mobileAuthLinks && mobileUserMenu) {
+                    // Hide loading states first
+                    if (navbarLoading) navbarLoading.classList.add('hidden');
+                    if (mobileNavbarLoading) mobileNavbarLoading.classList.add('hidden');
+                    
+                    // Desktop
+                    authLinks.classList.add('hidden');
+                    userMenu.classList.remove('hidden');
+                    
+                    // Update user info
+                    const userName = document.getElementById('user-name');
+                    const userEmail = document.getElementById('user-email');
+                    const userAvatar = document.getElementById('user-avatar');
+                    const mobileUserName = document.getElementById('mobile-user-name');
+                    const mobileUserEmail = document.getElementById('mobile-user-email');
+                    const mobileUserAvatar = document.getElementById('mobile-user-avatar');
+                    
+                    if (userName && userEmail && userAvatar && mobileUserName && mobileUserEmail && mobileUserAvatar) {
+                        const displayName = user.display_name || user.email || 'Kullanıcı';
+                        const email = user.email || '';
+                        const photoUrl = user.photo_url || '/static/images/default-avatar.svg';
+                        
+                        userName.textContent = displayName;
+                        userEmail.textContent = email;
+                        userAvatar.src = photoUrl;
+                        
+                        mobileUserName.textContent = displayName;
+                        mobileUserEmail.textContent = email;
+                        mobileUserAvatar.src = photoUrl;
+                        
+                        console.log('Restaurant page: Navbar updated with user info');
+                    }
+                    
+                    // Mobile
+                    mobileAuthLinks.classList.add('hidden');
+                    mobileUserMenu.classList.remove('hidden');
+                }
+            } else {
+                // User is not authenticated, show auth links
+                const authLinks = document.getElementById('auth-links');
+                const userMenu = document.getElementById('user-menu');
+                const mobileAuthLinks = document.getElementById('mobile-auth-links');
+                const mobileUserMenu = document.getElementById('mobile-user-menu');
+                
+                if (authLinks && userMenu && mobileAuthLinks && mobileUserMenu) {
+                    // Hide loading states first
+                    if (navbarLoading) navbarLoading.classList.add('hidden');
+                    if (mobileNavbarLoading) mobileNavbarLoading.classList.add('hidden');
+                    
+                    // Desktop
+                    authLinks.classList.remove('hidden');
+                    userMenu.classList.add('hidden');
+                    
+                    // Mobile
+                    mobileAuthLinks.classList.remove('hidden');
+                    mobileUserMenu.classList.add('hidden');
+                    
+                    console.log('Restaurant page: Navbar updated with auth links');
+                }
+            }
+        } catch (error) {
+            console.error('Restaurant page: Error updating navbar:', error);
+        }
+    }
+    
+    // Load usage statistics
+    async function loadUsageStats() {
+        try {
+            const response = await fetch('/api/usage/stats');
+            if (response.ok) {
+                const data = await response.json();
+                updateUsageDisplay(data.usage_stats);
+            }
+        } catch (error) {
+            console.error('Failed to load usage stats:', error);
+        }
+    }
+    
+    // Update usage display
+    function updateUsageDisplay(stats) {
+        document.getElementById('dailyUsage').textContent = `${stats.daily_used}/${stats.daily_limit}`;
+        document.getElementById('restaurantUsage').textContent = `${stats.restaurant_used}/${stats.restaurant_limit}`;
+        
+        // Change color based on usage
+        const dailyElement = document.getElementById('dailyUsage');
+        const restaurantElement = document.getElementById('restaurantUsage');
+        
+        if (stats.daily_used >= stats.daily_limit * 0.8) {
+            dailyElement.className = 'font-medium text-red-600';
+        } else if (stats.daily_used >= stats.daily_limit * 0.6) {
+            dailyElement.className = 'font-medium text-yellow-600';
+        } else {
+            dailyElement.className = 'font-medium text-blue-900';
+        }
+        
+        if (stats.restaurant_used >= stats.restaurant_limit * 0.8) {
+            restaurantElement.className = 'font-medium text-red-600';
+        } else if (stats.restaurant_used >= stats.restaurant_limit * 0.6) {
+            restaurantElement.className = 'font-medium text-yellow-600';
+        } else {
+            restaurantElement.className = 'font-medium text-blue-900';
+        }
+    }
+    
+    // Check AI service status
+    function checkAIStatus() {
+        fetch('/api/ai-status')
+            .then(response => response.json())
+            .then(data => {
+                const statusDiv = document.getElementById('aiStatus');
+                const statusDot = statusDiv.querySelector('div');
+                const statusText = statusDiv.querySelector('span');
+                
+                if (data.available) {
+                    statusDot.className = 'w-2 h-2 rounded-full mr-2 bg-green-400';
+                    statusText.textContent = `AI Hazır (${data.model})`;
+                    statusDiv.className = 'mt-4 inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800';
+                } else {
+                    statusDot.className = 'w-2 h-2 rounded-full mr-2 bg-red-400';
+                    statusText.textContent = 'AI Devre Dışı';
+                    statusDiv.className = 'mt-4 inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800';
+                }
+            })
+            .catch(error => {
+                const statusDiv = document.getElementById('aiStatus');
+                const statusDot = statusDiv.querySelector('div');
+                const statusText = statusDiv.querySelector('span');
+                
+                statusDot.className = 'w-2 h-2 rounded-full mr-2 bg-red-400';
+                statusText.textContent = 'AI Durumu Kontrol Edilemedi';
+                statusDiv.className = 'mt-4 inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800';
+            });
+    }
+    
+    // Character counter for input
+    document.getElementById('questionInput').addEventListener('input', function(e) {
+        const charCount = e.target.value.length;
+        document.getElementById('charCount').textContent = charCount;
+        
+        // Change color based on character count
+        const charCountElement = document.getElementById('charCount');
+        if (charCount >= 135) {  // 90% of 150
+            charCountElement.className = 'text-xs text-red-500';
+        } else if (charCount >= 120) {  // 80% of 150
+            charCountElement.className = 'text-xs text-yellow-500';
+        } else {
+            charCountElement.className = 'text-xs text-gray-400';
+        }
+    });
+    
+    // Welcome message and status check
     window.onload = function() {
-        addMessage('assistant', 'Merhaba! Ben Lezzet Durağı\'nın AI asistanıyım. Restoran hakkında herhangi bir soru sorabilirsiniz!');
+        checkAuthStatus();
     };
 </script>
 {% endblock %}

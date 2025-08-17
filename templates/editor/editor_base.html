@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Editör Paneli{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'editor': '#1e40af',      // Blue-800
+                        'editorLight': '#3b82f6', // Blue-500
+                        'editorDark': '#1e3a8a',  // Blue-900
+                        'primary': '#3b82f6'      // Blue-500
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        .editor-gradient {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Left Sidebar -->
+        {% include 'editor/left_editor_navbar.html' %}
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <h1 class="text-2xl font-bold text-gray-900">{% block page_title %}Editör Paneli{% endblock %}</h1>
+                            {% if user %}
+                            <div class="flex items-center space-x-3 text-sm text-gray-600">
+                                <span>Hoş geldin,</span>
+                                <div class="flex items-center space-x-2">
+                                    {% if user.photoURL %}
+                                    <img src="{{ user.photoURL }}" alt="{{ user.displayName }}" class="w-6 h-6 rounded-full">
+                                    {% else %}
+                                    <div class="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                                        <span class="text-xs text-gray-600">{{ user.displayName[0] if user.displayName else 'E' }}</span>
+                                    </div>
+                                    {% endif %}
+                                    <span class="font-medium text-gray-900">{{ user.displayName or user.email }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Right side actions -->
+                        <div class="flex items-center space-x-4">
+                            {% block header_actions %}{% endblock %}
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

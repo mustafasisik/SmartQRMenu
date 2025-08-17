@@ -1,0 +1,1628 @@
+{% extends "editor/editor_base.html" %}
+
+{% block title %}Menüler - Editör Paneli{% endblock %}
+
+{% block page_title %}Menü Yönetimi{% endblock %}
+
+{% block header_actions %}
+<button id="add-menu-btn" class="bg-editor hover:bg-editorDark text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+    </svg>
+    <span>Yeni Menü</span>
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Menü Yönetimi</h1>
+                <p class="text-gray-600">Restoranlarınızın menülerini yönetin</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="refresh-menus" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-editor" id="total-menus">-</div>
+                <div class="text-sm text-gray-600">Toplam Menü</div>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-green-600" id="total-categories">-</div>
+                <div class="text-sm text-gray-600">Toplam Kategori</div>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-yellow-600" id="total-products">-</div>
+                <div class="text-sm text-gray-600">Toplam Ürün</div>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-blue-600" id="active-menus">-</div>
+                <div class="text-sm text-gray-600">Aktif Menüler</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menus Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">Menü Listesi</h3>
+                <div class="text-sm text-gray-500">
+                    <span id="menu-count">0</span> menü bulundu
+                </div>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Menü</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restoran</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategoriler</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ürünler</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="menus-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Loading state -->
+                    <tr id="loading-row">
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            <div class="flex items-center justify-center space-x-2">
+                                <svg class="animate-spin h-5 w-5 text-editor" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Menüler yükleniyor...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Empty state -->
+        <div id="menus-empty" class="hidden px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Henüz menü oluşturulmamış</h3>
+            <p class="mt-1 text-sm text-gray-500">İlk menünüzü oluşturmak için "Yeni Menü" butonuna tıklayın.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Menu Modal -->
+<div id="menu-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-lg font-medium text-gray-900">Yeni Menü Oluştur</h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="menu-form">
+                <!-- Basic Menu Information -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Menü Bilgileri</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="menuName" class="block text-sm font-medium text-gray-700 mb-2">Menü Adı *</label>
+                            <input type="text" id="menuName" name="menuName" required placeholder="Ana Menü" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="restaurantSelect" class="block text-sm font-medium text-gray-700 mb-2">Restoran *</label>
+                            <select id="restaurantSelect" name="restaurantSelect" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                                <option value="">Restoran seçin</option>
+                                <!-- Dinamik restoran listesi buraya yüklenecek -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="menuDescription" class="block text-sm font-medium text-gray-700 mb-2">Açıklama</label>
+                        <textarea id="menuDescription" name="menuDescription" rows="2" placeholder="Menü hakkında kısa açıklama..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent"></textarea>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="menuLanguage" class="block text-sm font-medium text-gray-700 mb-2">Dil</label>
+                        <select id="menuLanguage" name="menuLanguage" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                            <option value="tr">Türkçe</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- AI Image Analysis Section -->
+                <div class="border-b border-gray-200 pb-6">
+                                    <div class="flex justify-between items-center mb-4">
+                    <h4 class="text-lg font-medium text-gray-900">🤖 AI Görsel Analizi</h4>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-sm text-gray-500">Yemek fotoğrafından menü içeriği çıkar</span>
+                        <button type="button" id="test-ai-service-btn" class="bg-purple-500 hover:bg-purple-600 text-white px-2 py-1 rounded text-xs transition-colors">
+                            Test AI Service
+                        </button>
+                    </div>
+                </div>
+                    
+                    <div class="space-y-4">
+                        <!-- Image Upload Area -->
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-editor transition-colors">
+                            <div id="image-upload-area" class="cursor-pointer">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div class="mt-2">
+                                    <label for="menu-image" class="cursor-pointer">
+                                        <span class="text-editor hover:text-editorDark font-medium">Fotoğraf yükle</span>
+                                        <span class="text-gray-500"> veya sürükle bırak</span>
+                                    </label>
+                                    <input id="menu-image" type="file" accept="image/*" class="hidden" />
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">PNG, JPG, JPEG (Max: 5MB)</p>
+                            </div>
+                            
+                            <!-- Image Preview -->
+                            <div id="image-preview" class="hidden mt-4">
+                                <img id="preview-img" src="" alt="Preview" class="mx-auto max-h-32 rounded-lg shadow-sm">
+                                <div class="mt-2 flex justify-center space-x-2">
+                                    <button type="button" id="analyze-image-btn" class="bg-editor hover:bg-editorDark text-white px-4 py-2 rounded-md text-sm transition-colors">
+                                        🔍 Görseli Analiz Et
+                                    </button>
+                                    <button type="button" id="remove-image-btn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm transition-colors">
+                                        ❌ Kaldır
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                                        <!-- AI Analysis Results -->
+                <div id="ai-analysis-results" class="hidden">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-center mb-3">
+                            <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                            <h5 class="text-sm font-medium text-blue-900">AI Analiz Sonuçları</h5>
+                        </div>
+                        
+                        <div id="ai-suggested-menu" class="space-y-3 max-h-64 overflow-y-auto">
+                            <!-- AI suggestions will be populated here -->
+                        </div>
+                        
+                        <div class="mt-4 flex space-x-2">
+                            <button type="button" id="apply-ai-suggestions" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition-colors flex items-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>AI Önerilerini Uygula</span>
+                            </button>
+                            <button type="button" id="clear-ai-suggestions" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm transition-colors flex items-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                <span>Temizle</span>
+                            </button>
+                            <button type="button" id="test-ai-btn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm transition-colors flex items-center space-x-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                </svg>
+                                <span>Test AI</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                        
+                        <!-- Loading State -->
+                        <div id="ai-loading" class="hidden">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                                <div class="flex items-center justify-center space-x-2">
+                                    <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-blue-600">AI görseli analiz ediyor...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Categories Section -->
+                <div class="border-b border-gray-200 pb-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-medium text-gray-900">Kategoriler</h4>
+                        <button type="button" id="add-category-btn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm transition-colors">
+                            + Kategori Ekle
+                        </button>
+                    </div>
+                    
+                    <div id="categories-container" class="space-y-4">
+                        <!-- Kategoriler buraya dinamik olarak eklenecek -->
+                    </div>
+                </div>
+                
+                <!-- Additional Settings -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Ek Ayarlar</h4>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="menuActive" name="menuActive" checked class="h-4 w-4 text-editor focus:ring-editor border-gray-300 rounded">
+                        <label for="menuActive" class="ml-2 text-sm text-gray-700">Menü Aktif</label>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" id="save-menu-btn" class="flex-1 bg-editor hover:bg-editorDark text-white px-4 py-2 rounded-md transition-colors">
+                        Kaydet
+                    </button>
+                    <button type="button" id="cancel-menu-btn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors">
+                        İptal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Category Template (Hidden) -->
+<div id="category-template" class="hidden">
+    <div class="category-item border border-gray-200 rounded-lg p-4 bg-gray-50">
+        <div class="flex justify-between items-start mb-3">
+            <h5 class="text-sm font-medium text-gray-900">Kategori</h5>
+            <button type="button" class="remove-category-btn text-red-600 hover:text-red-800">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Kategori Adı *</label>
+                <input type="text" name="categoryNames[]" required placeholder="Ana Yemekler" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Sıralama</label>
+                <input type="number" name="categoryOrders[]" value="1" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Açıklama</label>
+            <textarea name="categoryDescriptions[]" rows="2" placeholder="Kategori açıklaması..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent"></textarea>
+        </div>
+        
+        <!-- Products Section -->
+        <div class="border-t border-gray-200 pt-3">
+            <div class="flex justify-between items-center mb-3">
+                <h6 class="text-xs font-medium text-gray-700">Ürünler</h6>
+                <button type="button" class="add-product-btn bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition-colors">
+                    + Ürün Ekle
+                </button>
+            </div>
+            
+            <div class="products-container space-y-2">
+                <!-- Ürünler buraya dinamik olarak eklenecek -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Template (Hidden) -->
+<div id="product-template" class="hidden">
+    <div class="product-item border border-gray-200 rounded p-3 bg-white">
+        <div class="flex justify-between items-start mb-2">
+            <h6 class="text-xs font-medium text-gray-700">Ürün</h6>
+            <button type="button" class="remove-product-btn text-red-600 hover:text-red-800">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Ürün Adı *</label>
+                <input type="text" name="productNames[]" required placeholder="İskender Kebap" class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-editor focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Fiyat (TL) *</label>
+                <input type="number" name="productPrices[]" required step="0.01" min="0" placeholder="45.00" class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-editor focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Sıralama</label>
+                <input type="number" name="productOrders[]" value="1" min="1" class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-editor focus:border-transparent">
+            </div>
+        </div>
+        
+        <div class="mb-2">
+            <label class="block text-xs font-medium text-gray-600 mb-1">Açıklama</label>
+            <textarea name="productDescriptions[]" rows="2" placeholder="Ürün açıklaması..." class="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-editor focus:border-transparent"></textarea>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center">
+                <input type="checkbox" name="productAvailable[]" checked class="h-3 w-3 text-editor focus:ring-editor border-gray-300 rounded">
+                <label class="ml-1 text-xs text-gray-600">Mevcut</label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" name="productSpicy[]" class="h-3 w-3 text-editor focus:ring-editor border-gray-300 rounded">
+                <label class="ml-1 text-xs text-gray-600">Acılı</label>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" name="productVegetarian[]" class="h-3 w-3 text-editor focus:ring-editor border-gray-300 rounded">
+                <label class="ml-1 text-xs text-gray-600">Vejetaryen</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Menü Sil</h3>
+            <p class="text-sm text-gray-600 mb-4">Bu menüyü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+            <div class="flex space-x-3">
+                <button id="confirm-delete-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
+                    Evet, Sil
+                </button>
+                <button id="cancel-delete-btn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors">
+                    İptal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+/* AI-generated field styles */
+.ai-generated {
+    background-color: #dcfce7 !important; /* Light green background */
+    border-color: #22c55e !important; /* Green border */
+    color: #166534 !important; /* Dark green text */
+}
+
+.ai-generated:focus {
+    background-color: #bbf7d0 !important; /* Slightly darker green on focus */
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1) !important; /* Green focus ring */
+}
+
+/* Existing field styles (blue theme) */
+.existing-field {
+    background-color: #dbeafe !important; /* Light blue background */
+    border-color: #3b82f6 !important; /* Blue border */
+    color: #1e40af !important; /* Dark blue text */
+}
+
+/* Transition effects */
+input, textarea, select {
+    transition: all 0.2s ease-in-out;
+}
+</style>
+
+<script>
+let currentMenus = [];
+let currentRestaurants = [];
+let currentEditingMenu = null;
+let currentDeletingMenu = null;
+let categoryCounter = 0;
+let productCounter = 0;
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadMenus();
+    loadRestaurants();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    console.log('🔧 Setting up editor menu event listeners...');
+    
+    // Refresh button
+    const refreshBtn = document.getElementById('refresh-menus');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', loadMenus);
+        console.log('✅ Refresh button listener added');
+    }
+    
+    // Add menu button
+    const addBtn = document.getElementById('add-menu-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            console.log('🟢 Add menu button clicked');
+            openMenuModal();
+        });
+        console.log('✅ Add menu button listener added');
+    }
+    
+    // Form submission
+    const form = document.getElementById('menu-form');
+    if (form) {
+        form.addEventListener('submit', saveMenu);
+        console.log('✅ Menu form submission listener added');
+    }
+    
+    // Close modal button
+    const closeBtn = document.getElementById('close-modal-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeMenuModal);
+        console.log('✅ Close modal button listener added');
+    }
+    
+    // Cancel button
+    const cancelBtn = document.getElementById('cancel-menu-btn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeMenuModal);
+        console.log('✅ Cancel menu button listener added');
+    }
+    
+    // Delete confirmation buttons
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', deleteMenu);
+        console.log('✅ Confirm delete menu button listener added');
+    }
+    
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+        console.log('✅ Cancel delete menu button listener added');
+    }
+    
+    // AI Image Analysis Event Listeners
+    setupImageAnalysisListeners();
+}
+
+async function loadMenus() {
+    console.log('🔄 Loading editor menus...');
+    
+    try {
+        const response = await fetch('/api/editor/menus');
+        if (!response.ok) {
+            throw new Error('Failed to fetch menus');
+        }
+        
+        const data = await response.json();
+        currentMenus = data.menus || [];
+        
+        console.log('✅ Editor menus loaded:', currentMenus);
+        displayMenus();
+        updateStats();
+        
+    } catch (error) {
+        console.error('❌ Error loading editor menus:', error);
+        showError('Menüler yüklenirken hata oluştu');
+    }
+}
+
+async function loadRestaurants() {
+    console.log('🏪 Loading editor restaurants for menu creation...');
+    
+    try {
+        const response = await fetch('/api/editor/restaurants');
+        if (!response.ok) {
+            throw new Error('Failed to fetch restaurants');
+        }
+        
+        const data = await response.json();
+        currentRestaurants = data.restaurants || [];
+        
+        console.log('✅ Editor restaurants loaded for menus:', currentRestaurants);
+        populateRestaurantDropdown();
+        
+    } catch (error) {
+        console.error('❌ Error loading editor restaurants for menus:', error);
+        showError('Restoranlar yüklenirken hata oluştu');
+    }
+}
+
+function populateRestaurantDropdown() {
+    console.log('🏪 Populating restaurant dropdown with:', currentRestaurants);
+    
+    const dropdown = document.getElementById('restaurantSelect');
+    if (!dropdown) {
+        console.error('❌ Restaurant dropdown not found');
+        return;
+    }
+    
+    // Clear existing options (keep the first "select" option)
+    dropdown.innerHTML = '<option value="">Restoran seçin</option>';
+    
+    // Add restaurant options
+    currentRestaurants.forEach(restaurant => {
+        if (restaurant.isActive) {
+            const option = document.createElement('option');
+            option.value = restaurant.slug || restaurant.id;
+            option.textContent = restaurant.name;
+            dropdown.appendChild(option);
+        }
+    });
+    
+    console.log(`✅ Restaurant dropdown populated with ${currentRestaurants.filter(r => r.isActive).length} active restaurants`);
+}
+
+function displayMenus() {
+    const tbody = document.getElementById('menus-table-body');
+    const loadingRow = document.getElementById('loading-row');
+    const emptyState = document.getElementById('menus-empty');
+    const menuCount = document.getElementById('menu-count');
+    
+    // Hide loading and empty states
+    if (loadingRow) loadingRow.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'none';
+    
+    menuCount.textContent = currentMenus.length;
+    
+    if (currentMenus.length === 0) {
+        // Show empty state
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+    }
+    
+    // Clear existing rows
+    tbody.innerHTML = '';
+    
+    // Add menu rows
+    currentMenus.forEach(menu => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        
+        const statusBadge = menu.isActive 
+            ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Aktif</span>'
+            : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pasif</span>';
+        
+        const categoryCount = menu.categories ? menu.categories.length : 0;
+        const productCount = menu.categories ? menu.categories.reduce((total, cat) => total + (cat.products ? cat.products.length : 0), 0) : 0;
+        
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-12 w-12 bg-editor rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">${menu.name || 'İsimsiz'}</div>
+                        <div class="text-sm text-gray-500">${menu.description || 'Açıklama yok'}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ${menu.restaurantName || 'Restoran belirtilmemiş'}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    ${categoryCount} kategori
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    ${productCount} ürün
+                </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${statusBadge}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex space-x-2">
+                    <button onclick="editMenu('${menu.id}')" 
+                            class="text-editor hover:text-editorDark transition-colors">
+                        Düzenle
+                    </button>
+                    <button onclick="deleteMenuConfirm('${menu.id}', '${menu.name}')" 
+                            class="text-red-600 hover:text-red-800 transition-colors">
+                        Sil
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function updateStats() {
+    const totalMenus = currentMenus.length;
+    const activeMenus = currentMenus.filter(m => m.isActive).length;
+    
+    // Calculate categories and products
+    let totalCategories = 0;
+    let totalProducts = 0;
+    
+    currentMenus.forEach(menu => {
+        if (menu.categories) {
+            totalCategories += menu.categories.length;
+            menu.categories.forEach(category => {
+                if (category.products) {
+                    totalProducts += category.products.length;
+                }
+            });
+        }
+    });
+    
+    document.getElementById('total-menus').textContent = totalMenus;
+    document.getElementById('total-categories').textContent = totalCategories;
+    document.getElementById('total-products').textContent = totalProducts;
+    document.getElementById('active-menus').textContent = activeMenus;
+}
+
+function openMenuModal(menu = null) {
+    console.log('🟢 Opening menu modal with:', menu);
+    
+    currentEditingMenu = menu;
+    
+    const modal = document.getElementById('menu-modal');
+    const title = document.getElementById('modal-title');
+    const form = document.getElementById('menu-form');
+    const saveBtn = document.getElementById('save-menu-btn');
+    
+    if (menu) {
+        // Edit mode
+        title.textContent = 'Menü Düzenle';
+        saveBtn.textContent = 'Güncelle';
+        
+        // Populate form
+        const menuNameInput = document.getElementById('menuName');
+        const menuDescInput = document.getElementById('menuDescription');
+        const menuLangInput = document.getElementById('menuLanguage');
+        const restaurantSelect = document.getElementById('restaurantSelect');
+        const menuActiveInput = document.getElementById('menuActive');
+        
+        menuNameInput.value = menu.name || '';
+        menuDescInput.value = menu.description || '';
+        menuLangInput.value = menu.language || 'tr';
+        restaurantSelect.value = menu.restaurantId || '';
+        menuActiveInput.checked = menu.isActive !== false;
+        
+        // Mark existing fields as blue
+        menuNameInput.classList.add('existing-field');
+        menuDescInput.classList.add('existing-field');
+        menuLangInput.classList.add('existing-field');
+        restaurantSelect.classList.add('existing-field');
+        menuActiveInput.classList.add('existing-field');
+        
+        // Load categories and products
+        loadMenuCategories(menu);
+        
+    } else {
+        // Add mode
+        title.textContent = 'Yeni Menü Oluştur';
+        saveBtn.textContent = 'Kaydet';
+        
+        // Clear form
+        form.reset();
+        clearCategories();
+    }
+    
+    // Clear AI analysis section
+    clearAIAnalysis();
+    
+    modal.classList.remove('hidden');
+}
+
+function closeMenuModal() {
+    const modal = document.getElementById('menu-modal');
+    modal.classList.add('hidden');
+    
+    // Reset form
+    document.getElementById('menu-form').reset();
+    clearCategories();
+    currentEditingMenu = null;
+    
+    // Clear AI suggestions
+    window.currentAISuggestions = null;
+}
+
+function clearCategories() {
+    const container = document.getElementById('categories-container');
+    if (container) {
+        container.innerHTML = '';
+    }
+    categoryCounter = 0;
+    productCounter = 0;
+}
+
+function loadMenuCategories(menu) {
+    clearCategories();
+    
+    if (menu.categories && menu.categories.length > 0) {
+        menu.categories.forEach(category => {
+            addCategory(category);
+        });
+    } else {
+        // Add at least one empty category
+        addCategory();
+    }
+    
+    // Mark existing menu fields as blue
+    if (menu.isAIGenerated) {
+        const menuNameInput = document.getElementById('menuName');
+        const menuDescInput = document.getElementById('menuDescription');
+        
+        if (menu.isAIGenerated.name && menuNameInput) {
+            menuNameInput.classList.add('existing-field');
+        }
+        if (menu.isAIGenerated.description && menuDescInput) {
+            menuDescInput.classList.add('existing-field');
+        }
+    }
+}
+
+function addCategory(categoryData = null) {
+    categoryCounter++;
+    
+    const template = document.getElementById('category-template');
+    const container = document.getElementById('categories-container');
+    
+    if (!template || !container) return;
+    
+    const categoryElement = template.cloneNode(true);
+    categoryElement.id = `category-${categoryCounter}`;
+    categoryElement.classList.remove('hidden');
+    
+    // Set category data if editing
+    if (categoryData) {
+        const nameInput = categoryElement.querySelector('input[name="categoryNames[]"]');
+        const orderInput = categoryElement.querySelector('input[name="categoryOrders[]"]');
+        const descInput = categoryElement.querySelector('textarea[name="categoryDescriptions[]"]');
+        
+        nameInput.value = categoryData.name || '';
+        orderInput.value = categoryData.order || 1;
+        descInput.value = categoryData.description || '';
+        
+        // Mark as AI-generated if applicable
+        if (categoryData.isAIGenerated) {
+            nameInput.classList.add('ai-generated');
+            orderInput.classList.add('ai-generated');
+            descInput.classList.add('ai-generated');
+        }
+        
+        // Load products
+        if (categoryData.products && categoryData.products.length > 0) {
+            categoryData.products.forEach(product => {
+                addProduct(categoryElement.querySelector('.products-container'), product);
+            });
+        }
+    }
+    
+    // Setup event listeners
+    const removeCategoryBtn = categoryElement.querySelector('.remove-category-btn');
+    const addProductBtn = categoryElement.querySelector('.add-product-btn');
+    
+    if (removeCategoryBtn) {
+        removeCategoryBtn.addEventListener('click', () => removeCategory(categoryElement));
+    }
+    
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', () => addProduct(categoryElement.querySelector('.products-container')));
+    }
+    
+    container.appendChild(categoryElement);
+    
+    return categoryElement;
+}
+
+function removeCategory(categoryElement) {
+    if (categoryElement) {
+        categoryElement.remove();
+    }
+}
+
+function addProduct(container, productData = null) {
+    productCounter++;
+    
+    const template = document.getElementById('product-template');
+    
+    if (!template || !container) return;
+    
+    const productElement = template.cloneNode(true);
+    productElement.id = `product-${productCounter}`;
+    productElement.classList.remove('hidden');
+    
+    // Set product data if editing
+    if (productData) {
+        const nameInput = productElement.querySelector('input[name="productNames[]"]');
+        const priceInput = productElement.querySelector('input[name="productPrices[]"]');
+        const orderInput = productElement.querySelector('input[name="productOrders[]"]');
+        const descInput = productElement.querySelector('textarea[name="productDescriptions[]"]');
+        const availableInput = productElement.querySelector('input[name="productAvailable[]"]');
+        const spicyInput = productElement.querySelector('input[name="productSpicy[]"]');
+        const vegetarianInput = productElement.querySelector('input[name="productVegetarian[]"]');
+        
+        nameInput.value = productData.name || '';
+        priceInput.value = productData.price || '';
+        orderInput.value = productData.order || 1;
+        descInput.value = productData.description || '';
+        availableInput.checked = productData.available !== false;
+        spicyInput.checked = productData.spicy || false;
+        vegetarianInput.checked = productData.vegetarian || false;
+        
+        // Mark as AI-generated if applicable
+        if (productData.isAIGenerated) {
+            nameInput.classList.add('ai-generated');
+            priceInput.classList.add('ai-generated');
+            orderInput.classList.add('ai-generated');
+            descInput.classList.add('ai-generated');
+            availableInput.classList.add('ai-generated');
+            spicyInput.classList.add('ai-generated');
+            vegetarianInput.classList.add('ai-generated');
+        }
+    }
+    
+    // Setup event listener
+    const removeProductBtn = productElement.querySelector('.remove-product-btn');
+    if (removeProductBtn) {
+        removeProductBtn.addEventListener('click', () => removeProduct(productElement));
+    }
+    
+    container.appendChild(productElement);
+}
+
+function removeProduct(productElement) {
+    if (productElement) {
+        productElement.remove();
+    }
+}
+
+// Add category button event listener
+document.addEventListener('click', function(e) {
+    if (e.target && e.target.id === 'add-category-btn') {
+        addCategory();
+    }
+});
+
+async function saveMenu(event) {
+    event.preventDefault();
+    console.log('💾 Saving menu...');
+    
+    const formData = new FormData(event.target);
+    const menuData = Object.fromEntries(formData.entries());
+    
+    // Validation
+    if (!menuData.menuName || !menuData.menuName.trim()) {
+        showError('Menü adı zorunludur');
+        return;
+    }
+    
+    if (!menuData.restaurantSelect) {
+        showError('Restoran seçimi zorunludur');
+        return;
+    }
+    
+            // Collect categories and products data
+        const categories = [];
+        const categoryElements = document.querySelectorAll('.category-item');
+        
+        categoryElements.forEach((categoryElement, categoryIndex) => {
+            const categoryNameInput = categoryElement.querySelector('input[name="categoryNames[]"]');
+            const categoryOrderInput = categoryElement.querySelector('input[name="categoryOrders[]"]');
+            const categoryDescriptionInput = categoryElement.querySelector('textarea[name="categoryDescriptions[]"]');
+            
+            const categoryName = categoryNameInput.value;
+            const categoryOrder = parseInt(categoryOrderInput.value) || 1;
+            const categoryDescription = categoryDescriptionInput.value;
+            
+            if (categoryName.trim()) {
+                const category = {
+                    name: categoryName.trim(),
+                    order: categoryOrder,
+                    description: categoryDescription.trim(),
+                    isAIGenerated: categoryNameInput.classList.contains('ai-generated'),
+                    products: []
+                };
+                
+                // Collect products for this category
+                const productElements = categoryElement.querySelectorAll('.product-item');
+                productElements.forEach((productElement, productIndex) => {
+                    const productNameInput = productElement.querySelector('input[name="productNames[]"]');
+                    const productPriceInput = productElement.querySelector('input[name="productPrices[]"]');
+                    const productOrderInput = productElement.querySelector('input[name="productOrders[]"]');
+                    const productDescriptionInput = productElement.querySelector('textarea[name="productDescriptions[]"]');
+                    const productAvailableInput = productElement.querySelector('input[name="productAvailable[]"]');
+                    const productSpicyInput = productElement.querySelector('input[name="productSpicy[]"]');
+                    const productVegetarianInput = productElement.querySelector('input[name="productVegetarian[]"]');
+                    
+                    const productName = productNameInput.value;
+                    const productPrice = parseFloat(productPriceInput.value) || 0;
+                    const productOrder = parseInt(productOrderInput.value) || 1;
+                    const productDescription = productDescriptionInput.value;
+                    const productAvailable = productAvailableInput.checked;
+                    const productSpicy = productSpicyInput.checked;
+                    const productVegetarian = productVegetarianInput.checked;
+                    
+                    if (productName.trim() && productPrice > 0) {
+                        category.products.push({
+                            name: productName.trim(),
+                            price: productPrice,
+                            order: productOrder,
+                            description: productDescription.trim(),
+                            available: productAvailable,
+                            spicy: productSpicy,
+                            vegetarian: productVegetarian,
+                            isAIGenerated: productNameInput.classList.contains('ai-generated')
+                        });
+                    }
+                });
+                
+                categories.push(category);
+            }
+        });
+    
+    // Process form data
+    const menuNameInput = document.getElementById('menuName');
+    const menuDescInput = document.getElementById('menuDescription');
+    
+    const processedData = {
+        name: menuData.menuName,
+        description: menuData.menuDescription,
+        restaurantId: menuData.restaurantSelect,
+        language: menuData.menuLanguage,
+        categories: categories,
+        isActive: menuData.menuActive === 'on',
+        isAIGenerated: {
+            name: menuNameInput.classList.contains('ai-generated'),
+            description: menuDescInput.classList.contains('ai-generated')
+        }
+    };
+    
+    try {
+        let response;
+        
+        if (currentEditingMenu) {
+            // Update existing menu
+            response = await fetch(`/api/editor/menus/${currentEditingMenu.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(processedData)
+            });
+        } else {
+            // Create new menu
+            response = await fetch('/api/editor/menus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(processedData)
+            });
+        }
+        
+        if (!response.ok) {
+            throw new Error('Failed to save menu');
+        }
+        
+        const data = await response.json();
+        showSuccess(currentEditingMenu ? 'Menü başarıyla güncellendi' : 'Menü başarıyla oluşturuldu');
+        
+        closeMenuModal();
+        loadMenus();
+        
+    } catch (error) {
+        console.error('❌ Error saving menu:', error);
+        showError('Menü kaydedilirken hata oluştu');
+    }
+}
+
+function editMenu(menuId) {
+    console.log('✏️ Editing menu:', menuId);
+    
+    const menu = currentMenus.find(m => m.id === menuId);
+    if (menu) {
+        openMenuModal(menu);
+    }
+}
+
+function deleteMenuConfirm(menuId, menuName) {
+    console.log('🗑️ Delete menu confirm:', menuId, menuName);
+    
+    currentDeletingMenu = currentMenus.find(m => m.id === menuId);
+    if (currentDeletingMenu) {
+        const modal = document.getElementById('delete-modal');
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    modal.classList.add('hidden');
+    currentDeletingMenu = null;
+}
+
+async function deleteMenu() {
+    if (!currentDeletingMenu) return;
+    
+    console.log('🗑️ Deleting menu:', currentDeletingMenu.id);
+    
+    try {
+        const response = await fetch(`/api/editor/menus/${currentDeletingMenu.id}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete menu');
+        }
+        
+        showSuccess('Menü başarıyla silindi');
+        closeDeleteModal();
+        loadMenus();
+        
+    } catch (error) {
+        console.error('❌ Error deleting menu:', error);
+        showError('Menü silinirken hata oluştu');
+    }
+}
+
+// AI Image Analysis Functions
+function setupImageAnalysisListeners() {
+    console.log('🤖 Setting up AI image analysis listeners...');
+    
+    const imageInput = document.getElementById('menu-image');
+    const imageUploadArea = document.getElementById('image-upload-area');
+    const imagePreview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+    const analyzeBtn = document.getElementById('analyze-image-btn');
+    const removeBtn = document.getElementById('remove-image-btn');
+    const applyBtn = document.getElementById('apply-ai-suggestions');
+    const clearBtn = document.getElementById('clear-ai-suggestions');
+    
+    if (imageInput) {
+        imageInput.addEventListener('change', handleImageUpload);
+        console.log('✅ Image input listener added');
+    }
+    
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', analyzeImageWithAI);
+        console.log('✅ Analyze button listener added');
+    }
+    
+    if (removeBtn) {
+        removeBtn.addEventListener('click', removeImage);
+        console.log('✅ Remove image button listener added');
+    }
+    
+    if (applyBtn) {
+        applyBtn.addEventListener('click', applyAISuggestions);
+        console.log('✅ Apply AI suggestions button listener added');
+    }
+    
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearAISuggestions);
+        console.log('✅ Clear AI suggestions button listener added');
+    }
+    
+    // Test AI button
+    const testBtn = document.getElementById('test-ai-btn');
+    if (testBtn) {
+        testBtn.addEventListener('click', testAIWithSampleImage);
+        console.log('✅ Test AI button listener added');
+    }
+    
+    // Test AI Service button
+    const testServiceBtn = document.getElementById('test-ai-service-btn');
+    if (testServiceBtn) {
+        testServiceBtn.addEventListener('click', testAIService);
+        console.log('✅ Test AI Service button listener added');
+    }
+    
+    // Drag and drop functionality
+    if (imageUploadArea) {
+        imageUploadArea.addEventListener('dragover', handleDragOver);
+        imageUploadArea.addEventListener('drop', handleDrop);
+        console.log('✅ Drag and drop listeners added');
+    }
+}
+
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        displayImagePreview(file);
+    }
+}
+
+function handleDragOver(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add('border-editor');
+}
+
+function handleDrop(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('border-editor');
+    
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+            displayImagePreview(file);
+            // Update the file input
+            const imageInput = document.getElementById('menu-image');
+            if (imageInput) {
+                imageInput.files = files;
+            }
+        }
+    }
+}
+
+function displayImagePreview(file) {
+    if (!file || !file.type.startsWith('image/')) {
+        showError('Lütfen geçerli bir resim dosyası seçin');
+        return;
+    }
+    
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+        showError('Dosya boyutu 5MB\'dan küçük olmalıdır');
+        return;
+    }
+    
+    console.log('📸 Image file details:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified
+    });
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const previewImg = document.getElementById('preview-img');
+        const imagePreview = document.getElementById('image-preview');
+        const imageUploadArea = document.getElementById('image-upload-area');
+        
+        if (previewImg && imagePreview && imageUploadArea) {
+            previewImg.src = e.target.result;
+            imageUploadArea.classList.add('hidden');
+            imagePreview.classList.remove('hidden');
+            
+            // Store the file for AI analysis
+            window.currentImageFile = file;
+            
+            console.log('✅ Image preview displayed:', file.name);
+            console.log('📸 Image data URL length:', e.target.result.length);
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeImage() {
+    const imageInput = document.getElementById('menu-image');
+    const imagePreview = document.getElementById('image-preview');
+    const imageUploadArea = document.getElementById('image-upload-area');
+    const aiResults = document.getElementById('ai-analysis-results');
+    const aiLoading = document.getElementById('ai-loading');
+    
+    if (imageInput) imageInput.value = '';
+    if (imagePreview) imagePreview.classList.add('hidden');
+    if (imageUploadArea) imageUploadArea.classList.remove('hidden');
+    if (aiResults) aiResults.classList.add('hidden');
+    if (aiLoading) aiLoading.classList.add('hidden');
+    
+    // Clear stored file
+    window.currentImageFile = null;
+    
+    console.log('✅ Image removed');
+}
+
+async function analyzeImageWithAI() {
+    if (!window.currentImageFile) {
+        showError('Lütfen önce bir resim yükleyin');
+        return;
+    }
+    
+    console.log('🤖 Starting AI image analysis...');
+    
+    // Show loading state
+    const aiLoading = document.getElementById('ai-loading');
+    const aiResults = document.getElementById('ai-analysis-results');
+    
+    if (aiLoading) aiLoading.classList.remove('hidden');
+    if (aiResults) aiResults.classList.add('hidden');
+    
+    try {
+        // Convert image to base64
+        const base64Image = await fileToBase64(window.currentImageFile);
+        
+        // Send to AI analysis API
+        const response = await fetch('/api/ai/analyze-menu-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                image: base64Image,
+                language: document.getElementById('menuLanguage')?.value || 'tr'
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('AI analizi başarısız oldu');
+        }
+        
+        const data = await response.json();
+        console.log('✅ AI analysis completed:', data);
+        
+        // Check if the response has the expected structure
+        console.log('📊 Full AI response:', data);
+        
+        if (data.success && data.suggestions) {
+            console.log('📊 AI suggestions data:', data.suggestions);
+            
+            // Store AI suggestions globally for later use
+            window.currentAISuggestions = data.suggestions;
+            console.log('💾 Stored AI suggestions globally:', window.currentAISuggestions);
+            
+            // Display AI suggestions
+            displayAISuggestions(data.suggestions);
+        } else if (data.error) {
+            throw new Error(data.error);
+        } else if (data.suggestions) {
+            // Direct response format (without success wrapper)
+            console.log('📊 Direct AI suggestions data:', data.suggestions);
+            
+            // Store AI suggestions globally for later use
+            window.currentAISuggestions = data.suggestions;
+            console.log('💾 Stored AI suggestions globally:', window.currentAISuggestions);
+            
+            // Display AI suggestions
+            displayAISuggestions(data.suggestions);
+        } else {
+            throw new Error('AI analizi yanıtı beklenmeyen formatta');
+        }
+        
+        // Hide loading, show results
+        if (aiLoading) aiLoading.classList.add('hidden');
+        if (aiResults) aiResults.classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('❌ AI analysis error:', error);
+        showError('AI analizi sırasında hata oluştu: ' + error.message);
+        
+        // Hide loading
+        if (aiLoading) aiLoading.classList.add('hidden');
+    }
+}
+
+function displayAISuggestions(suggestions) {
+    const container = document.getElementById('ai-suggested-menu');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    if (suggestions.menuName) {
+        const menuNameDiv = document.createElement('div');
+        menuNameDiv.className = 'bg-white p-3 rounded border border-blue-200';
+        menuNameDiv.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-blue-900">Önerilen Menü Adı:</span>
+                <span class="text-sm text-blue-700">${suggestions.menuName}</span>
+            </div>
+        `;
+        container.appendChild(menuNameDiv);
+    }
+    
+    if (suggestions.description) {
+        const descDiv = document.createElement('div');
+        descDiv.className = 'bg-white p-3 rounded border border-blue-200';
+        descDiv.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-blue-900">Önerilen Açıklama:</span>
+                <span class="text-sm text-blue-700">${suggestions.description}</span>
+            </div>
+        `;
+        container.appendChild(descDiv);
+    }
+    
+    if (suggestions.categories && suggestions.categories.length > 0) {
+        suggestions.categories.forEach((category, index) => {
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'bg-white p-3 rounded border border-blue-200';
+            
+            let categoryHtml = `
+                <div class="mb-2">
+                    <span class="text-sm font-medium text-blue-900">Kategori ${index + 1}:</span>
+                    <span class="text-sm text-blue-700 ml-2">${category.name}</span>
+                </div>
+            `;
+            
+            if (category.description) {
+                categoryHtml += `
+                    <div class="mb-2">
+                        <span class="text-sm text-blue-900">Açıklama:</span>
+                        <span class="text-sm text-blue-700 ml-2">${category.description}</span>
+                    </div>
+                `;
+            }
+            
+            if (category.products && category.products.length > 0) {
+                categoryHtml += '<div class="ml-4 space-y-1">';
+                category.products.forEach(product => {
+                    categoryHtml += `
+                        <div class="text-sm text-blue-700">
+                            • ${product.name} - ${product.price} TL
+                            ${product.description ? ` (${product.description})` : ''}
+                        </div>
+                    `;
+                });
+                categoryHtml += '</div>';
+            }
+            
+            categoryDiv.innerHTML = categoryHtml;
+            container.appendChild(categoryDiv);
+        });
+    }
+    
+    console.log('✅ AI suggestions displayed');
+}
+
+function applyAISuggestions() {
+    console.log('✅ Applying AI suggestions...');
+    console.log('🔍 Current AI suggestions:', window.currentAISuggestions);
+    
+    if (!window.currentAISuggestions) {
+        showError('AI önerileri bulunamadı. Lütfen önce görseli analiz edin.');
+        return;
+    }
+    
+    const suggestions = window.currentAISuggestions;
+    console.log('📋 Processing suggestions:', suggestions);
+    
+    // Apply menu name if available
+    if (suggestions.menuName) {
+        const menuNameInput = document.getElementById('menuName');
+        if (menuNameInput) {
+            menuNameInput.value = suggestions.menuName;
+            // Mark as AI-generated with green color
+            menuNameInput.classList.add('ai-generated');
+            console.log('✅ Applied menu name:', suggestions.menuName);
+        }
+    }
+    
+    // Apply description if available
+    if (suggestions.description) {
+        const descInput = document.getElementById('menuDescription');
+        if (descInput) {
+            descInput.value = suggestions.description;
+            // Mark as AI-generated with green color
+            descInput.classList.add('ai-generated');
+            console.log('✅ Applied description:', suggestions.description);
+        }
+    }
+    
+    // Apply categories and products
+    if (suggestions.categories && suggestions.categories.length > 0) {
+        // Clear existing categories first
+        clearCategories();
+        
+        // Add each category with its products
+        suggestions.categories.forEach((category, index) => {
+            console.log(`✅ Adding category: ${category.name}`);
+            
+            // Add category
+            const categoryElement = addCategory({
+                name: category.name,
+                description: category.description || '',
+                order: index + 1,
+                isAIGenerated: true // Mark as AI-generated
+            });
+            
+            // Add products to this category
+            if (category.products && category.products.length > 0) {
+                category.products.forEach(product => {
+                    console.log(`✅ Adding product: ${product.name} - ${product.price}`);
+                    
+                    // Parse price (remove "TL" and convert to number)
+                    let price = product.price;
+                    if (typeof price === 'string') {
+                        price = price.replace(/[^\d.,]/g, '').replace(',', '.');
+                    }
+                    
+                    addProduct(
+                        categoryElement.querySelector('.products-container'),
+                        {
+                            name: product.name,
+                            price: price,
+                            description: product.description || '',
+                            order: 1,
+                            isAIGenerated: true // Mark as AI-generated
+                        }
+                    );
+                });
+            }
+        });
+        
+        console.log(`✅ Applied ${suggestions.categories.length} categories with products`);
+    }
+    
+    showSuccess('AI önerileri başarıyla uygulandı! Yeni eklenen alanlar yeşil renkte görünüyor.');
+    console.log('✅ AI suggestions applied successfully');
+}
+
+function clearAISuggestions() {
+    const aiResults = document.getElementById('ai-analysis-results');
+    if (aiResults) {
+        aiResults.classList.add('hidden');
+    }
+    console.log('✅ AI suggestions cleared');
+}
+
+function clearAIAnalysis() {
+    // Clear image
+    removeImage();
+    
+    // Clear AI results
+    clearAISuggestions();
+    
+    // Clear stored AI suggestions
+    window.currentAISuggestions = null;
+    
+    // Reset image upload area
+    const imageUploadArea = document.getElementById('image-upload-area');
+    if (imageUploadArea) {
+        imageUploadArea.classList.remove('hidden');
+    }
+    
+    console.log('✅ AI analysis section cleared');
+}
+
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            // Remove data:image/jpeg;base64, prefix
+            const base64 = reader.result.split(',')[1];
+            console.log('🔄 File converted to base64:', {
+                originalType: file.type,
+                dataURLPrefix: reader.result.split(',')[0],
+                base64Length: base64.length
+            });
+            resolve(base64);
+        };
+        reader.onerror = error => reject(error);
+    });
+}
+
+function testAIWithSampleImage() {
+    console.log('🧪 Testing AI with sample data...');
+    
+    // Create a sample AI response for testing (based on working test code)
+    const sampleSuggestions = {
+        menuName: "Doy Dos Menü",
+        description: "Geleneksel Türk mutfağı",
+        categories: [
+            {
+                name: "Ana Yemekler",
+                description: "Geleneksel ana yemekler",
+                products: [
+                    {
+                        name: "İskender Kebap",
+                        price: "45.00 TL",
+                        description: "Geleneksel İskender kebap"
+                    },
+                    {
+                        name: "Lahmacun",
+                        price: "25.00 TL",
+                        description: "Taze lahmacun"
+                    },
+                    {
+                        name: "Pide",
+                        price: "35.00 TL",
+                        description: "Kaşarlı pide"
+                    }
+                ]
+            },
+            {
+                name: "Çorbalar",
+                description: "Sıcak çorbalar",
+                products: [
+                    {
+                        name: "Mercimek Çorbası",
+                        price: "15.00 TL",
+                        description: "Geleneksel mercimek çorbası"
+                    }
+                ]
+            },
+            {
+                name: "İçecekler",
+                description: "Soğuk ve sıcak içecekler",
+                products: [
+                    {
+                        name: "Çay",
+                        price: "8.00 TL",
+                        description: "Demli çay"
+                    },
+                    {
+                        name: "Ayran",
+                        price: "10.00 TL",
+                        description: "Taze ayran"
+                    }
+                ]
+            }
+        ]
+    };
+    
+    // Store and display sample suggestions
+    window.currentAISuggestions = sampleSuggestions;
+    displayAISuggestions(sampleSuggestions);
+    
+    // Show AI results
+    const aiResults = document.getElementById('ai-analysis-results');
+    if (aiResults) {
+        aiResults.classList.remove('hidden');
+    }
+    
+    showSuccess('Test verisi yüklendi! Şimdi "AI Önerilerini Uygula" butonuna tıklayabilirsiniz. Yeni eklenen alanlar yeşil renkte görünecek.');
+    console.log('✅ Test AI data loaded');
+}
+
+async function testAIService() {
+    console.log('🧪 Testing AI service...');
+    
+    try {
+        const response = await fetch('/api/ai/test');
+        const data = await response.json();
+        
+        if (data.success) {
+            const basicTest = data.basic_test;
+            let message = `AI Service Status: ${data.message}\n`;
+            message += `Model: ${data.ai_status.model}\n`;
+            message += `Available: ${data.ai_status.available}\n`;
+            
+            if (basicTest.success) {
+                message += `Basic Test: ✅ ${basicTest.message}\n`;
+                message += `Response: ${basicTest.response}`;
+            } else {
+                message += `Basic Test: ❌ ${basicTest.error}`;
+            }
+            
+            showSuccess(message);
+            console.log('✅ AI service test successful:', data);
+        } else {
+            showError(`AI Service Error: ${data.error}`);
+            console.error('❌ AI service test failed:', data);
+        }
+    } catch (error) {
+        showError(`AI Service Test Error: ${error.message}`);
+        console.error('❌ AI service test error:', error);
+    }
+}
+
+// Utility functions
+function showSuccess(message) {
+    // You can implement a toast notification here
+    alert(message);
+}
+
+function showError(message) {
+    // You can implement a toast notification here
+    alert('Hata: ' + message);
+}
+</script>
+{% endblock %}

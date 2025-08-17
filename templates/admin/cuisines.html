@@ -1,0 +1,494 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Mutfak Türleri - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Mutfak Türleri</h1>
+            <p class="text-gray-600">Sistemdeki mutfak türlerini yönetin</p>
+        </div>
+        <button id="add-cuisine-btn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            <span>Mutfak Türü Ekle</span>
+        </button>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center">
+                <div class="p-2 bg-blue-100 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Toplam Mutfak Türü</p>
+                    <p class="text-2xl font-bold text-gray-900" id="total-cuisines">-</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center">
+                <div class="p-2 bg-green-100 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Aktif Mutfak Türü</p>
+                    <p class="text-2xl font-bold text-gray-900" id="active-cuisines">-</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div class="flex items-center">
+                <div class="p-2 bg-purple-100 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600">Kullanılan Mutfak Türü</p>
+                    <p class="text-2xl font-bold text-gray-900" id="used-cuisines">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cuisines Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">Mutfak Türleri Listesi</h3>
+                <button id="refresh-cuisines" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mutfak Türü</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Açıklama</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restoran Sayısı</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Oluşturulma</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="cuisines-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Loading state -->
+                    <tr id="loading-row">
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            <div class="flex items-center justify-center space-x-2">
+                                <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Mutfak türleri yükleniyor...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Empty state -->
+        <div id="empty-state" class="hidden px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18z"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Henüz mutfak türü yok</h3>
+            <p class="mt-1 text-sm text-gray-500">İlk mutfak türünü ekleyerek başlayın.</p>
+            <div class="mt-6">
+                <button id="add-first-cuisine-btn" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md transition-colors">
+                    Mutfak Türü Ekle
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Cuisine Modal -->
+<div id="cuisine-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 id="cuisine-modal-title" class="text-lg font-medium text-gray-900 mb-4">Mutfak Türü Ekle</h3>
+            
+            <form id="cuisine-form">
+                <div class="mb-4">
+                    <label for="cuisineName" class="block text-sm font-medium text-gray-700 mb-2">Mutfak Türü Adı *</label>
+                    <input type="text" id="cuisineName" name="cuisineName" required placeholder="Türk Mutfağı" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                
+                <div class="mb-4">
+                    <label for="cuisineDescription" class="block text-sm font-medium text-gray-700 mb-2">Açıklama</label>
+                    <textarea id="cuisineDescription" name="cuisineDescription" rows="3" placeholder="Bu mutfak türü hakkında kısa açıklama..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
+                </div>
+                
+                <div class="mb-6">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="cuisineIsActive" name="cuisineIsActive" checked class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="cuisineIsActive" class="ml-2 text-sm text-gray-700">Mutfak Türü Aktif</label>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" id="save-cuisine-btn" class="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md transition-colors">
+                        Kaydet
+                    </button>
+                    <button type="button" id="cancel-cuisine-btn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors">
+                        İptal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-cuisine-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Mutfak Türü Sil</h3>
+            <p class="text-sm text-gray-600 mb-4">Bu mutfak türünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+            <div class="flex space-x-3">
+                <button id="confirm-delete-cuisine-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
+                    Evet, Sil
+                </button>
+                <button id="cancel-delete-cuisine-btn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors">
+                    İptal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentCuisines = [];
+let currentEditingCuisine = null;
+let currentDeletingCuisine = null;
+
+// Load cuisines on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadCuisines();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    console.log('🔧 Setting up cuisine event listeners...');
+    
+    // Refresh button
+    const refreshBtn = document.getElementById('refresh-cuisines');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', loadCuisines);
+        console.log('✅ Refresh button listener added');
+    }
+    
+    // Add cuisine button
+    const addBtn = document.getElementById('add-cuisine-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            console.log('🟢 Add cuisine button clicked');
+            openCuisineModal();
+        });
+        console.log('✅ Add cuisine button listener added');
+    }
+    
+    // Add first cuisine button
+    const addFirstBtn = document.getElementById('add-first-cuisine-btn');
+    if (addFirstBtn) {
+        addFirstBtn.addEventListener('click', () => {
+            console.log('🟢 Add first cuisine button clicked');
+            openCuisineModal();
+        });
+        console.log('✅ Add first cuisine button listener added');
+    }
+    
+    // Form submission
+    const form = document.getElementById('cuisine-form');
+    if (form) {
+        form.addEventListener('submit', saveCuisine);
+        console.log('✅ Cuisine form submission listener added');
+    }
+    
+    // Cancel button
+    const cancelBtn = document.getElementById('cancel-cuisine-btn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeCuisineModal);
+        console.log('✅ Cancel cuisine button listener added');
+    }
+    
+    // Delete confirmation buttons
+    const confirmDeleteBtn = document.getElementById('confirm-delete-cuisine-btn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', deleteCuisine);
+        console.log('✅ Confirm delete cuisine button listener added');
+    }
+    
+    const cancelDeleteBtn = document.getElementById('cancel-delete-cuisine-btn');
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', closeDeleteCuisineModal);
+        console.log('✅ Cancel delete cuisine button listener added');
+    }
+}
+
+async function loadCuisines() {
+    console.log('🔄 Loading cuisines...');
+    
+    try {
+        const response = await fetch('/api/admin/cuisines');
+        if (!response.ok) {
+            throw new Error('Failed to fetch cuisines');
+        }
+        
+        const data = await response.json();
+        currentCuisines = data.cuisines || [];
+        
+        console.log('✅ Cuisines loaded:', currentCuisines);
+        displayCuisines();
+        updateStats();
+        
+    } catch (error) {
+        console.error('❌ Error loading cuisines:', error);
+        showError('Mutfak türleri yüklenirken hata oluştu');
+    }
+}
+
+function displayCuisines() {
+    const tbody = document.getElementById('cuisines-table-body');
+    const loadingRow = document.getElementById('loading-row');
+    const emptyState = document.getElementById('empty-state');
+    
+    // Hide loading and empty states
+    if (loadingRow) loadingRow.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'none';
+    
+    if (currentCuisines.length === 0) {
+        // Show empty state
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+    }
+    
+    // Clear existing rows
+    tbody.innerHTML = '';
+    
+    // Add cuisine rows
+    currentCuisines.forEach(cuisine => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        
+        const statusBadge = cuisine.isActive 
+            ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Aktif</span>'
+            : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pasif</span>';
+        
+        const createdAt = cuisine.createdAt ? new Date(cuisine.createdAt).toLocaleDateString('tr-TR') : '-';
+        
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-gray-900">${cuisine.name}</div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="text-sm text-gray-900">${cuisine.description || '-'}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${statusBadge}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                ${cuisine.restaurantCount || 0}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${createdAt}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <button onclick="editCuisine('${cuisine.id}')" class="text-primary hover:text-primary/80 mr-3">Düzenle</button>
+                <button onclick="deleteCuisineConfirm('${cuisine.id}')" class="text-red-600 hover:text-red-800">Sil</button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function updateStats() {
+    const totalCuisines = currentCuisines.length;
+    const activeCuisines = currentCuisines.filter(c => c.isActive).length;
+    const usedCuisines = currentCuisines.filter(c => (c.restaurantCount || 0) > 0).length;
+    
+    document.getElementById('total-cuisines').textContent = totalCuisines;
+    document.getElementById('active-cuisines').textContent = activeCuisines;
+    document.getElementById('used-cuisines').textContent = usedCuisines;
+}
+
+function openCuisineModal(cuisine = null) {
+    console.log('🟢 Opening cuisine modal for:', cuisine);
+    
+    const modal = document.getElementById('cuisine-modal');
+    const title = document.getElementById('cuisine-modal-title');
+    const form = document.getElementById('cuisine-form');
+    const saveBtn = document.getElementById('save-cuisine-btn');
+    
+    if (cuisine) {
+        // Edit mode
+        currentEditingCuisine = cuisine;
+        title.textContent = 'Mutfak Türü Düzenle';
+        saveBtn.textContent = 'Güncelle';
+        
+        // Populate form
+        document.getElementById('cuisineName').value = cuisine.name || '';
+        document.getElementById('cuisineDescription').value = cuisine.description || '';
+        document.getElementById('cuisineIsActive').checked = cuisine.isActive !== false;
+        
+    } else {
+        // Add mode
+        currentEditingCuisine = null;
+        title.textContent = 'Mutfak Türü Ekle';
+        saveBtn.textContent = 'Kaydet';
+        
+        // Clear form
+        form.reset();
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function closeCuisineModal() {
+    const modal = document.getElementById('cuisine-modal');
+    modal.classList.add('hidden');
+    
+    // Reset form
+    document.getElementById('cuisine-form').reset();
+    currentEditingCuisine = null;
+}
+
+async function saveCuisine(event) {
+    event.preventDefault();
+    console.log('💾 Saving cuisine...');
+    
+    const formData = new FormData(event.target);
+    const cuisineData = {
+        name: formData.get('cuisineName'),
+        description: formData.get('cuisineDescription'),
+        isActive: formData.get('cuisineIsActive') === 'on'
+    };
+    
+    // Validation
+    if (!cuisineData.name.trim()) {
+        showError('Mutfak türü adı gereklidir');
+        return;
+    }
+    
+    try {
+        let response;
+        
+        if (currentEditingCuisine) {
+            // Update existing cuisine
+            response = await fetch(`/api/admin/cuisines/${currentEditingCuisine.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(cuisineData)
+            });
+        } else {
+            // Create new cuisine
+            response = await fetch('/api/admin/cuisines', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(cuisineData)
+            });
+        }
+        
+        if (!response.ok) {
+            throw new Error('Failed to save cuisine');
+        }
+        
+        const data = await response.json();
+        showSuccess(currentEditingCuisine ? 'Mutfak türü başarıyla güncellendi' : 'Mutfak türü başarıyla eklendi');
+        
+        closeCuisineModal();
+        loadCuisines();
+        
+    } catch (error) {
+        console.error('❌ Error saving cuisine:', error);
+        showError('Mutfak türü kaydedilirken hata oluştu');
+    }
+}
+
+function editCuisine(cuisineId) {
+    console.log('✏️ Editing cuisine:', cuisineId);
+    
+    const cuisine = currentCuisines.find(c => c.id === cuisineId);
+    if (cuisine) {
+        openCuisineModal(cuisine);
+    }
+}
+
+function deleteCuisineConfirm(cuisineId) {
+    console.log('🗑️ Delete cuisine confirm:', cuisineId);
+    
+    currentDeletingCuisine = currentCuisines.find(c => c.id === cuisineId);
+    if (currentDeletingCuisine) {
+        const modal = document.getElementById('delete-cuisine-modal');
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeDeleteCuisineModal() {
+    const modal = document.getElementById('delete-cuisine-modal');
+    modal.classList.add('hidden');
+    currentDeletingCuisine = null;
+}
+
+async function deleteCuisine() {
+    if (!currentDeletingCuisine) return;
+    
+    console.log('🗑️ Deleting cuisine:', currentDeletingCuisine.id);
+    
+    try {
+        const response = await fetch(`/api/admin/cuisines/${currentDeletingCuisine.id}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete cuisine');
+        }
+        
+        showSuccess('Mutfak türü başarıyla silindi');
+        closeDeleteCuisineModal();
+        loadCuisines();
+        
+    } catch (error) {
+        console.error('❌ Error deleting cuisine:', error);
+        showError('Mutfak türü silinirken hata oluştu');
+    }
+}
+
+// Utility functions
+function showSuccess(message) {
+    // You can implement a toast notification here
+    alert(message);
+}
+
+function showError(message) {
+    // You can implement a toast notification here
+    alert('Hata: ' + message);
+}
+</script>
+{% endblock %}

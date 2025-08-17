@@ -1,0 +1,689 @@
+{% extends "editor/editor_base.html" %}
+
+{% block title %}Restoranlarım - Editör Paneli{% endblock %}
+
+{% block page_title %}Restoranlarım{% endblock %}
+
+{% block header_actions %}
+<button id="add-restaurant-btn" class="bg-editor hover:bg-editorDark text-white px-4 py-2 rounded-md transition-colors flex items-center space-x-2">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+    </svg>
+    <span>Restoran Ekle</span>
+</button>
+{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Restoranlarım</h1>
+                <p class="text-gray-600">Kendine atanan restoranları yönet</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="refresh-restaurants" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-editor" id="total-count">-</div>
+                <div class="text-sm text-gray-600">Toplam Restoran</div>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-green-600" id="active-count">-</div>
+                <div class="text-sm text-gray-600">Aktif</div>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-yellow-600" id="pending-count">-</div>
+                <div class="text-sm text-gray-600">Bekleyen</div>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div class="text-center">
+                <div class="text-2xl font-bold text-blue-600" id="recent-updates">-</div>
+                <div class="text-sm text-gray-600">Son 7 Gün</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restaurants Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-medium text-gray-900">Restoran Listesi</h3>
+                <div class="text-sm text-gray-500">
+                    <span id="restaurant-count">0</span> restoran bulundu
+                </div>
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restoran</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mutfak & Etiketler</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Son Güncelleme</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="restaurants-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Loading state -->
+                    <tr id="loading-row">
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            <div class="flex items-center justify-center space-x-2">
+                                <svg class="animate-spin h-5 w-5 text-editor" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>Restoranlar yükleniyor...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Empty state -->
+        <div id="restaurants-empty" class="hidden px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">Henüz restoran atanmamış</h3>
+            <p class="mt-1 text-sm text-gray-500">Size henüz restoran atanmamış. Admin ile iletişime geçin.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Restaurant Modal -->
+<div id="restaurant-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-lg font-medium text-gray-900">Yeni Restoran Ekle</h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="restaurant-form">
+                <!-- Basic Information -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Temel Bilgiler</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Restoran Adı *</label>
+                            <input type="text" id="name" name="name" required placeholder="Lezzet Durağı" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Telefon</label>
+                            <input type="tel" id="phone" name="phone" placeholder="+90 555 123 45 67" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Restoran Email</label>
+                        <input type="email" id="email" name="email" placeholder="info@lezzet-duragi.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="website" class="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                        <input type="url" id="website" name="website" placeholder="https://lezzet-duragi.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Açıklama</label>
+                        <textarea id="description" name="description" rows="3" placeholder="Restoran hakkında kısa açıklama..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Cuisine & Tags -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Mutfak & Etiketler</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="cuisineTypes" class="block text-sm font-medium text-gray-700 mb-2">Mutfak Türleri *</label>
+                            <select id="cuisineTypes" name="cuisineTypes" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                                <option value="">Mutfak türü seçin</option>
+                                <!-- Dinamik mutfak türleri buraya yüklenecek -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="tags" class="block text-sm font-medium text-gray-700 mb-2">Etiketler (virgülle ayırın)</label>
+                            <input type="text" id="tags" name="tags" placeholder="helal, vegan seçenekleri, aile dostu" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Location -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Konum</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-2">Adres</label>
+                            <textarea id="address" name="address" rows="2" placeholder="Restoran adresi..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Business Hours -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Çalışma Saatleri</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="hoursOpen" class="block text-sm font-medium text-gray-700 mb-2">Açılış Saati</label>
+                            <input type="time" id="hoursOpen" name="hoursOpen" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="hoursClose" class="block text-sm font-medium text-gray-700 mb-2">Kapanış Saati</label>
+                            <input type="time" id="hoursClose" name="hoursClose" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-editor focus:border-transparent">
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2">Bu saatler tüm hafta boyunca geçerli olacak (Pazar kapalı)</p>
+                </div>
+                
+                <!-- Additional Settings -->
+                <div class="border-b border-gray-200 pb-6">
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Ek Ayarlar</h4>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="isActive" name="isActive" checked class="h-4 w-4 text-editor focus:ring-editor border-gray-300 rounded">
+                        <label for="isActive" class="ml-2 text-sm text-gray-700">Restoran Aktif</label>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" id="save-restaurant-btn" class="flex-1 bg-editor hover:bg-editorDark text-white px-4 py-2 rounded-md transition-colors">
+                        Kaydet
+                    </button>
+                    <button type="button" id="cancel-restaurant-btn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors">
+                        İptal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Restoran Sil</h3>
+            <p class="text-sm text-gray-600 mb-4">Bu restoranı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+            <div class="flex space-x-3">
+                <button id="confirm-delete-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors">
+                    Evet, Sil
+                </button>
+                <button id="cancel-delete-btn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors">
+                    İptal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentRestaurants = [];
+let currentEditingRestaurant = null;
+let currentDeletingRestaurant = null;
+let currentCuisines = [];
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadRestaurants();
+    loadCuisines();
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    console.log('🔧 Setting up editor restaurant event listeners...');
+    
+    // Refresh button
+    const refreshBtn = document.getElementById('refresh-restaurants');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', loadRestaurants);
+        console.log('✅ Refresh button listener added');
+    }
+    
+    // Add restaurant button
+    const addBtn = document.getElementById('add-restaurant-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            console.log('🟢 Add restaurant button clicked');
+            openRestaurantModal();
+        });
+        console.log('✅ Add restaurant button listener added');
+    }
+    
+    // Form submission
+    const form = document.getElementById('restaurant-form');
+    if (form) {
+        form.addEventListener('submit', saveRestaurant);
+        console.log('✅ Restaurant form submission listener added');
+    }
+    
+    // Close modal button
+    const closeBtn = document.getElementById('close-modal-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeRestaurantModal);
+        console.log('✅ Close modal button listener added');
+    }
+    
+    // Cancel button
+    const cancelBtn = document.getElementById('cancel-restaurant-btn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeRestaurantModal);
+        console.log('✅ Cancel restaurant button listener added');
+    }
+    
+    // Delete confirmation buttons
+    const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', deleteRestaurant);
+        console.log('✅ Confirm delete restaurant button listener added');
+    }
+    
+    const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+    if (cancelDeleteBtn) {
+        cancelDeleteBtn.addEventListener('click', closeDeleteModal);
+        console.log('✅ Cancel delete restaurant button listener added');
+    }
+}
+
+async function loadRestaurants() {
+    console.log('🔄 Loading editor restaurants...');
+    
+    try {
+        const response = await fetch('/api/editor/restaurants');
+        if (!response.ok) {
+            throw new Error('Failed to fetch restaurants');
+        }
+        
+        const data = await response.json();
+        currentRestaurants = data.restaurants || [];
+        
+        console.log('✅ Editor restaurants loaded:', currentRestaurants);
+        displayRestaurants();
+        updateStats();
+        
+    } catch (error) {
+        console.error('❌ Error loading editor restaurants:', error);
+        showError('Restoranlar yüklenirken hata oluştu');
+    }
+}
+
+async function loadCuisines() {
+    console.log('🍽️ Loading cuisines for editor...');
+    
+    try {
+        const response = await fetch('/api/cuisines');
+        if (!response.ok) {
+            throw new Error('Failed to fetch cuisines');
+        }
+        
+        const data = await response.json();
+        currentCuisines = data.cuisines || [];
+        
+        console.log('✅ Cuisines loaded for editor:', currentCuisines);
+        populateCuisineDropdown();
+        
+    } catch (error) {
+        console.error('❌ Error loading cuisines:', error);
+        showError('Mutfak türleri yüklenirken hata oluştu');
+    }
+}
+
+function populateCuisineDropdown() {
+    console.log('🍽️ Populating cuisine dropdown for editor with:', currentCuisines);
+    
+    const dropdown = document.getElementById('cuisineTypes');
+    if (!dropdown) {
+        console.error('❌ Cuisine dropdown not found');
+        return;
+    }
+    
+    // Clear existing options (keep the first "select" option)
+    dropdown.innerHTML = '<option value="">Mutfak türü seçin</option>';
+    
+    // Add cuisine options
+    currentCuisines.forEach(cuisine => {
+        if (cuisine.isActive) { // Sadece aktif mutfak türlerini göster
+            const option = document.createElement('option');
+            option.value = cuisine.name;
+            option.textContent = cuisine.name;
+            dropdown.appendChild(option);
+        }
+    });
+    
+    console.log(`✅ Cuisine dropdown populated for editor with ${currentCuisines.filter(c => c.isActive).length} active cuisines`);
+}
+
+function displayRestaurants() {
+    const tbody = document.getElementById('restaurants-table-body');
+    const loadingRow = document.getElementById('loading-row');
+    const emptyState = document.getElementById('restaurants-empty');
+    const restaurantCount = document.getElementById('restaurant-count');
+    
+    // Hide loading and empty states
+    if (loadingRow) loadingRow.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'none';
+    
+    restaurantCount.textContent = currentRestaurants.length;
+    
+    if (currentRestaurants.length === 0) {
+        // Show empty state
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+    }
+    
+    // Clear existing rows
+    tbody.innerHTML = '';
+    
+    // Add restaurant rows
+    currentRestaurants.forEach(restaurant => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        
+        const statusBadge = restaurant.isActive 
+            ? '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Aktif</span>'
+            : '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Pasif</span>';
+        
+        const lastUpdate = restaurant.updatedAt ? new Date(restaurant.updatedAt).toLocaleDateString('tr-TR') : '-';
+        
+        row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 h-12 w-12">
+                        <img class="h-12 w-12 rounded-lg object-cover" src="${restaurant.image_url || '/static/images/default-restaurant.svg'}" alt="">
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">${restaurant.name || 'İsimsiz'}</div>
+                        <div class="text-sm text-gray-500">${restaurant.address || 'Adres belirtilmemiş'}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">
+                    <div class="font-medium">${restaurant.cuisineTypes ? restaurant.cuisineTypes.join(', ') : 'Mutfak belirtilmemiş'}</div>
+                    <div class="text-xs text-gray-500 mt-1">${restaurant.tags ? restaurant.tags.join(', ') : 'Etiket belirtilmemiş'}</div>
+                </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+                ${statusBadge}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                ${lastUpdate}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div class="flex space-x-2">
+                    <button onclick="editRestaurant('${restaurant.slug || restaurant.id}')" 
+                            class="text-editor hover:text-editorDark transition-colors">
+                        Düzenle
+                    </button>
+                    <button onclick="deleteRestaurantConfirm('${restaurant.slug || restaurant.id}', '${restaurant.name}')" 
+                            class="text-red-600 hover:text-red-800 transition-colors">
+                        Sil
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+function updateStats() {
+    const totalCount = currentRestaurants.length;
+    const activeCount = currentRestaurants.filter(r => r.isActive).length;
+    const pendingCount = currentRestaurants.filter(r => !r.isActive).length;
+    
+    // Calculate recent updates (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentUpdates = currentRestaurants.filter(r => {
+        if (!r.updatedAt) return false;
+        const updateDate = new Date(r.updatedAt);
+        return updateDate >= sevenDaysAgo;
+    }).length;
+    
+    document.getElementById('total-count').textContent = totalCount;
+    document.getElementById('active-count').textContent = activeCount;
+    document.getElementById('pending-count').textContent = pendingCount;
+    document.getElementById('recent-updates').textContent = recentUpdates;
+}
+
+function openRestaurantModal(restaurant = null) {
+    console.log('🟢 Opening restaurant modal for editor with:', restaurant);
+    
+    currentEditingRestaurant = restaurant;
+    
+    const modal = document.getElementById('restaurant-modal');
+    const title = document.getElementById('modal-title');
+    const form = document.getElementById('restaurant-form');
+    const saveBtn = document.getElementById('save-restaurant-btn');
+    
+    if (restaurant) {
+        // Edit mode
+        title.textContent = 'Restoran Düzenle';
+        saveBtn.textContent = 'Güncelle';
+        
+        // Populate form
+        document.getElementById('name').value = restaurant.name || '';
+        document.getElementById('phone').value = restaurant.phone || '';
+        document.getElementById('email').value = restaurant.email || '';
+        document.getElementById('website').value = restaurant.website || '';
+        document.getElementById('address').value = restaurant.address || '';
+        document.getElementById('description').value = restaurant.description || '';
+        
+        // Cuisine & Tags
+        if (restaurant.cuisineTypes && restaurant.cuisineTypes.length > 0) {
+            const cuisineValue = restaurant.cuisineTypes[0];
+            const cuisineDropdown = document.getElementById('cuisineTypes');
+            
+            // Check if the cuisine exists in dropdown, if not add it temporarily
+            let optionExists = false;
+            for (let option of cuisineDropdown.options) {
+                if (option.value === cuisineValue) {
+                    optionExists = true;
+                    break;
+                }
+            }
+            
+            if (!optionExists && cuisineValue) {
+                // Add the cuisine temporarily if it doesn't exist
+                const option = document.createElement('option');
+                option.value = cuisineValue;
+                option.textContent = cuisineValue;
+                cuisineDropdown.appendChild(option);
+            }
+            
+            cuisineDropdown.value = cuisineValue;
+        } else {
+            document.getElementById('cuisineTypes').value = '';
+        }
+        document.getElementById('tags').value = restaurant.tags ? restaurant.tags.join(', ') : '';
+        
+        // Business Hours
+        document.getElementById('hoursOpen').value = restaurant.hours?.open || '';
+        document.getElementById('hoursClose').value = restaurant.hours?.close || '';
+        
+        // Additional Settings
+        document.getElementById('isActive').checked = restaurant.isActive !== false;
+        
+    } else {
+        // Add mode
+        title.textContent = 'Yeni Restoran Ekle';
+        saveBtn.textContent = 'Kaydet';
+        
+        // Clear form
+        form.reset();
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function closeRestaurantModal() {
+    const modal = document.getElementById('restaurant-modal');
+    modal.classList.add('hidden');
+    
+    // Reset form
+    document.getElementById('restaurant-form').reset();
+    currentEditingRestaurant = null;
+}
+
+async function saveRestaurant(event) {
+    event.preventDefault();
+    console.log('💾 Saving restaurant as editor...');
+    
+    const formData = new FormData(event.target);
+    const restaurantData = Object.fromEntries(formData.entries());
+    
+    // Validation
+    if (!restaurantData.name || !restaurantData.name.trim()) {
+        showError('Restoran adı zorunludur');
+        return;
+    }
+    
+    if (!restaurantData.cuisineTypes) {
+        showError('Mutfak türü seçimi zorunludur');
+        return;
+    }
+    
+    // Process form data
+    const processedData = {
+        name: restaurantData.name,
+        description: restaurantData.description,
+        cuisineTypes: restaurantData.cuisineTypes ? [restaurantData.cuisineTypes] : [],
+        tags: restaurantData.tags ? restaurantData.tags.split(',').map(s => s.trim()).filter(s => s) : [],
+        phone: restaurantData.phone || null,
+        email: restaurantData.email || null,
+        website: restaurantData.website || null,
+        address: restaurantData.address || null,
+        hours: { 
+            open: restaurantData.hoursOpen || null, 
+            close: restaurantData.hoursClose || null 
+        },
+        isActive: restaurantData.isActive === 'on'
+    };
+    
+    try {
+        let response;
+        
+        if (currentEditingRestaurant) {
+            // Update existing restaurant
+            const restaurantSlug = currentEditingRestaurant.slug || currentEditingRestaurant.id;
+            response = await fetch(`/api/editor/restaurants/${restaurantSlug}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(processedData)
+            });
+        } else {
+            // Create new restaurant
+            response = await fetch('/api/editor/restaurants', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(processedData)
+            });
+        }
+        
+        if (!response.ok) {
+            throw new Error('Failed to save restaurant');
+        }
+        
+        const data = await response.json();
+        showSuccess(currentEditingRestaurant ? 'Restoran başarıyla güncellendi' : 'Restoran başarıyla eklendi');
+        
+        closeRestaurantModal();
+        loadRestaurants();
+        
+    } catch (error) {
+        console.error('❌ Error saving restaurant:', error);
+        showError('Restoran kaydedilirken hata oluştu');
+    }
+}
+
+function editRestaurant(restaurantId) {
+    console.log('✏️ Editing restaurant as editor:', restaurantId);
+    
+    const restaurant = currentRestaurants.find(r => r.id === restaurantId || r.slug === restaurantId);
+    if (restaurant) {
+        openRestaurantModal(restaurant);
+    }
+}
+
+function deleteRestaurantConfirm(restaurantId, restaurantName) {
+    console.log('🗑️ Delete restaurant confirm as editor:', restaurantId, restaurantName);
+    
+    currentDeletingRestaurant = currentRestaurants.find(r => r.id === restaurantId || r.slug === restaurantId);
+    if (currentDeletingRestaurant) {
+        const modal = document.getElementById('delete-modal');
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('delete-modal');
+    modal.classList.add('hidden');
+    currentDeletingRestaurant = null;
+}
+
+async function deleteRestaurant() {
+    if (!currentDeletingRestaurant) return;
+    
+    console.log('🗑️ Deleting restaurant as editor:', currentDeletingRestaurant.id);
+    
+    try {
+        const restaurantSlug = currentDeletingRestaurant.slug || currentDeletingRestaurant.id;
+        const response = await fetch(`/api/editor/restaurants/${restaurantSlug}`, {
+            method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete restaurant');
+        }
+        
+        showSuccess('Restoran başarıyla silindi');
+        closeDeleteModal();
+        loadRestaurants();
+        
+    } catch (error) {
+        console.error('❌ Error deleting restaurant:', error);
+        showError('Restoran silinirken hata oluştu');
+    }
+}
+
+// Utility functions
+function showSuccess(message) {
+    // You can implement a toast notification here
+    alert(message);
+}
+
+function showError(message) {
+    // You can implement a toast notification here
+    alert('Hata: ' + message);
+}
+</script>
+{% endblock %}

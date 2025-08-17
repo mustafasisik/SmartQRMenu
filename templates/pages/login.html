@@ -1,0 +1,287 @@
+{% extends "landing_base.html" %}
+
+{% block title %}Giriş Yap - Lezzet Durağı{% endblock %}
+
+{% block content %}
+<!-- Login Section -->
+<section class="min-h-screen bg-gradient-to-br from-primary to-secondary flex items-center justify-center py-20">
+    <div class="max-w-md w-full mx-auto px-4">
+        <!-- Login Card -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <span class="text-3xl text-white">🔐</span>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900">Giriş Yap</h1>
+                <p class="text-gray-600 mt-2">AI asistanı kullanmak için giriş yapın</p>
+            </div>
+
+            <!-- Firebase Auth Container -->
+            <div id="firebase-auth-container" class="space-y-4">
+                <!-- Login Form -->
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-posta</label>
+                        <input type="email" id="email" name="email" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                               placeholder="ornek@email.com">
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Şifre</label>
+                        <input type="password" id="password" name="password" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                               placeholder="••••••••">
+                    </div>
+                    
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-primary to-secondary text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Giriş Yap
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="relative my-6">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">veya</span>
+                    </div>
+                </div>
+
+                <!-- Google Sign In -->
+                <button id="googleSignIn" 
+                        class="w-full bg-white border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5">
+                    <span>Google ile Giriş Yap</span>
+                </button>
+
+                <!-- Register Link -->
+                <div class="text-center mt-6">
+                    <p class="text-gray-600">
+                        Hesabınız yok mu? 
+                        <a href="/register" class="text-primary hover:text-primary-dark font-medium">Kayıt Ol</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="hidden text-center py-8">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p class="text-gray-600">Giriş yapılıyor...</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="successState" class="hidden text-center py-8">
+                <div class="w-16 h-16 bg-green-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <span class="text-3xl text-green-600">✅</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Giriş Başarılı!</h3>
+                <p id="successMessage" class="text-gray-600 mb-4">AI asistanı kullanmaya hazırsınız.</p>
+                <a href="/restaurant" 
+                   class="inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-2 px-6 rounded-lg hover:shadow-lg transition-all duration-300">
+                    Restoran Sayfasına Git
+                </a>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden text-center py-8">
+                <div class="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                    <span class="text-3xl text-red-600">❌</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Giriş Başarısız</h3>
+                <p id="errorMessage" class="text-gray-600 mb-4">Bir hata oluştu.</p>
+                <button onclick="showLoginForm()" 
+                        class="inline-block bg-gray-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors">
+                    Tekrar Dene
+                </button>
+            </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-6">
+            <a href="/" class="text-white hover:text-gray-200 transition-colors">
+                ← Ana Sayfaya Dön
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<script>
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "{{ config.FIREBASE_API_KEY }}",
+        authDomain: "{{ config.FIREBASE_AUTH_DOMAIN }}",
+        projectId: "{{ config.FIREBASE_PROJECT_ID }}",
+        storageBucket: "{{ config.FIREBASE_STORAGE_BUCKET }}",
+        messagingSenderId: "{{ config.FIREBASE_MESSAGING_SENDER_ID }}",
+        appId: "{{ config.FIREBASE_APP_ID }}"
+    };
+    
+    // Debug: Log Firebase config (remove in production)
+    console.log('Firebase Config:', firebaseConfig);
+    console.log('API Key length:', firebaseConfig.apiKey ? firebaseConfig.apiKey.length : 'undefined');
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Form submission
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        showLoading();
+        
+        try {
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            await handleAuthSuccess(user);
+        } catch (error) {
+            showError(getErrorMessage(error.code));
+        }
+    });
+
+    // Google Sign In
+    document.getElementById('googleSignIn').addEventListener('click', async function() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        showLoading();
+        
+        try {
+            const result = await auth.signInWithPopup(provider);
+            const user = result.user;
+            await handleAuthSuccess(user);
+        } catch (error) {
+            showError(getErrorMessage(error.code));
+        }
+    });
+
+    // Handle successful authentication
+    async function handleAuthSuccess(user) {
+        try {
+            const idToken = await user.getIdToken();
+            
+            // Send token to backend for login
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id_token: idToken })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
+                
+                // Update navbar immediately if possible
+                if (window.parent && window.parent.checkAuthStatus) {
+                    console.log('Login: Updating parent navbar');
+                    window.parent.checkAuthStatus();
+                } else if (window.opener && window.opener.checkAuthStatus) {
+                    console.log('Login: Updating opener navbar');
+                    window.opener.checkAuthStatus();
+                }
+                
+                setTimeout(() => {
+                    window.location.href = '/restaurant';
+                }, 1500);
+            } else {
+                showError('Giriş hatası: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError('Giriş sırasında hata oluştu');
+        }
+    }
+
+    // UI State Functions
+    function showLoading() {
+        document.getElementById('firebase-auth-container').classList.add('hidden');
+        document.getElementById('loadingState').classList.remove('hidden');
+        document.getElementById('successState').classList.add('hidden');
+        document.getElementById('errorState').classList.add('hidden');
+    }
+
+    function showSuccess(message = 'Giriş başarılı!') {
+        document.getElementById('firebase-auth-container').classList.add('hidden');
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('successState').classList.remove('hidden');
+        document.getElementById('errorState').classList.add('hidden');
+        
+        if (message) {
+            document.getElementById('successMessage').textContent = message;
+        }
+    }
+
+    function showError(message) {
+        document.getElementById('firebase-auth-container').classList.add('hidden');
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('successState').classList.add('hidden');
+        document.getElementById('errorState').classList.remove('hidden');
+        document.getElementById('errorMessage').textContent = message;
+    }
+
+    function showLoginForm() {
+        document.getElementById('firebase-auth-container').classList.remove('hidden');
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('successState').classList.add('hidden');
+        document.getElementById('errorState').classList.add('hidden');
+    }
+
+    // Error message mapping
+    function getErrorMessage(errorCode) {
+        const errorMessages = {
+            'auth/user-not-found': 'Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı.',
+            'auth/wrong-password': 'Şifre yanlış.',
+            'auth/invalid-email': 'Geçersiz e-posta adresi.',
+            'auth/weak-password': 'Şifre çok zayıf.',
+            'auth/email-already-in-use': 'Bu e-posta adresi zaten kullanımda.',
+            'auth/popup-closed-by-user': 'Giriş penceresi kapatıldı.',
+            'auth/cancelled-popup-request': 'Giriş işlemi iptal edildi.',
+            'auth/popup-blocked': 'Giriş penceresi engellendi. Lütfen popup engelleyiciyi kapatın.'
+        };
+        
+        return errorMessages[errorCode] || 'Giriş yapılırken bir hata oluştu.';
+    }
+
+    // Check if user is already signed in
+    auth.onAuthStateChanged(function(user) {
+        if (user) {
+            console.log('Login page: User already signed in, checking session...');
+            
+            // Check if user is already authenticated in backend session
+            fetch('/api/auth/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.authenticated) {
+                        console.log('Login page: User authenticated in session, redirecting...');
+                        // Don't redirect immediately, let the user see success message first
+                        // The redirect will happen in handleAuthSuccess function
+                    } else {
+                        console.log('Login page: User signed in Firebase but not in session');
+                        // User is signed in Firebase but not in backend session
+                        // This can happen if user refreshed the page
+                        // We'll let them stay on login page to re-authenticate
+                    }
+                })
+                .catch(error => {
+                    console.error('Login page: Auth status check failed:', error);
+                    // On error, let user stay on login page
+                });
+        } else {
+            console.log('Login page: No user signed in');
+        }
+    });
+</script>
+{% endblock %}

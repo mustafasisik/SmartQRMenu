@@ -19,33 +19,28 @@ class FirebaseService:
         try:
             # Initialize Firebase Admin SDK
             if not firebase_admin._apps:
-                # Check if service account key file exists
-                service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH')
-                if not service_account_path:
-                    # Try to use default path
-                    service_account_path = 'keys/serviceAccount.json'
+
+                firebase_creds = {
+                    "type": "service_account",
+                    "project_id": os.getenv("FIREBASE_PROJECT_ID"),
+                    "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
+                    "private_key": os.getenv("FIREBASE_PRIVATE_KEY").replace("\\n", "\n"),
+                    "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
+                    "client_id": os.getenv("FIREBASE_CLIENT_ID"),
+                    "auth_uri": os.getenv("FIREBASE_AUTH_URI"),
+                    "token_uri": os.getenv("FIREBASE_TOKEN_URI"),
+                    "auth_provider_x509_cert_url": os.getenv("FIREBASE_AUTH_PROVIDER_CERT"),
+                    "client_x509_cert_url": os.getenv("FIREBASE_CLIENT_CERT_URL"),
+                }
                 
-                if service_account_path and os.path.exists(service_account_path):
-                    print(f"🔑 Using service account: {service_account_path}")
-                    cred = credentials.Certificate(service_account_path)
-                    self.admin_app = firebase_admin.initialize_app(cred)
-                else:
-                    print("⚠️ No service account found, trying environment variables")
-                    # Use environment variables for Firebase config
-                    self.admin_app = firebase_admin.initialize_app()
+
+                cred = credentials.Certificate(firebase_creds)
+                self.admin_app = firebase_admin.initialize_app(cred)
                 print("✅ Firebase Admin SDK initialized successfully")
             else:
-                # Use existing app
                 existing_apps = list(firebase_admin._apps.keys())
-                print(f"📱 Existing Firebase apps: {existing_apps}")
-                if '__default__' in firebase_admin._apps:
-                    self.admin_app = firebase_admin._apps['__default__']
-                    print("✅ Using existing default Firebase Admin SDK app")
-                else:
-                    # Use the first available app
-                    first_app_name = list(firebase_admin._apps.keys())[0]
-                    self.admin_app = firebase_admin._apps[first_app_name]
-                    print(f"✅ Using existing Firebase app: {first_app_name}")
+                self.admin_app = firebase_admin._apps.get("__default__", firebase_admin._apps[existing_apps[0]])
+                print(f"✅ Using existing Firebase app: {self.admin_app.name}")
             
             # Initialize Firebase Auth
             if self.admin_app:

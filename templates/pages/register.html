@@ -94,9 +94,9 @@
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 mb-2">Kayıt Başarılı!</h3>
                 <p id="successMessage" class="text-gray-600 mb-4">Hesabınız oluşturuldu. AI asistanı kullanmaya hazırsınız.</p>
-                <a href="/restaurant" 
+                <a href="/" 
                    class="inline-block bg-gradient-to-r from-primary to-secondary text-white font-semibold py-2 px-6 rounded-lg hover:shadow-lg transition-all duration-300">
-                    Restoran Sayfasına Git
+                    Ana Sayfaya Git
                 </a>
             </div>
 
@@ -214,7 +214,9 @@
             if (data.success) {
                 showSuccess('Kayıt başarılı! Yönlendiriliyorsunuz...');
                 setTimeout(() => {
-                    window.location.href = '/restaurant';
+                    // Use redirect from backend response, fallback to homepage
+                    const redirectUrl = data.redirect || '/';
+                    window.location.href = redirectUrl;
                 }, 1500);
             } else {
                 showError('Kayıt hatası: ' + data.error);
@@ -285,7 +287,8 @@
                 .then(data => {
                     if (data.authenticated) {
                         console.log('Register page: User authenticated in session, redirecting...');
-                        window.location.href = '/restaurant';
+                        // Redirect to homepage for authenticated users
+                        window.location.href = '/';
                     } else {
                         console.log('Register page: User signed in Firebase but not in session');
                         // User is signed in Firebase but not in backend session

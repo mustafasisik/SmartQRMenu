@@ -61,25 +61,14 @@ def get_featured_restaurants():
 def get_restaurant_menu(restaurant_slug):
     """Get restaurant menu by slug"""
     try:
-        print(f"🍽️ Menu request for restaurant: {restaurant_slug}")
         menu_data = firebase_service.get_restaurant_menu(restaurant_slug)
-        
-        if menu_data and isinstance(menu_data, dict):
-            categories_count = len(menu_data.get('categories', []))
-            print(f"📋 Menu data retrieved: {categories_count} categories")
-            print(f"📋 Menu name: {menu_data.get('name', 'Unknown')}")
-            print(f"📋 Menu description: {menu_data.get('description', 'No description')}")
-        else:
-            print(f"📋 Menu data retrieved: 0 categories")
         
         response_data = {
             'restaurant_slug': restaurant_slug,
             'menu': menu_data
         }
-        print(f"📤 Sending menu response: {response_data}")
         return jsonify(response_data)
     except Exception as e:
-        print(f"❌ Error getting restaurant menu: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/chat', methods=['POST'])
@@ -140,14 +129,10 @@ def chat_with_ai():
                 response = firebase_service.gemini_service.get_response(context)
                 
                 # Save chat message to Firestore
-                print(f"💾 Saving chat message for user {session.get('user_id')}")
                 save_result = firebase_service.save_chat_message(session.get('user_id'), question, response)
-                print(f"💾 Save result: {save_result}")
                 
                 # Get updated usage stats
-                print(f"📊 Getting updated usage stats for user {session.get('user_id')}")
                 usage_stats = firebase_service.get_user_usage_stats(session.get('user_id'))
-                print(f"📊 Updated usage stats: {usage_stats}")
                 
                 return jsonify({
                     'answer': response,
@@ -155,7 +140,6 @@ def chat_with_ai():
                     'usage_stats': usage_stats
                 })
             except Exception as ai_error:
-                print(f"AI service error: {ai_error}")
                 # Fallback response
                 return jsonify({
                     'answer': 'Üzgünüm, şu anda AI servisimiz meşgul. Lütfen daha sonra tekrar deneyin.',
@@ -169,7 +153,6 @@ def chat_with_ai():
             })
             
     except Exception as e:
-        print(f"Chat API error: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/menu/<restaurant_slug>')
@@ -186,7 +169,6 @@ def restaurant_menu(restaurant_slug):
         
         return render_template('pages/menu.html', restaurant=restaurant)
     except Exception as e:
-        print(f"Error loading restaurant menu: {e}")
         return "Restoran verileri yüklenemedi", 500
 
 
@@ -206,7 +188,6 @@ def api_login():
         
         # Verify the ID token with Firebase
         decoded_token = firebase_service.verify_id_token(data['id_token'])
-        print(f"🔐 Decoded token: {decoded_token}")
         
         if decoded_token:
             # Store user info in session
@@ -215,14 +196,10 @@ def api_login():
             session['user_display_name'] = decoded_token.get('name', '')
             session['user_photo_url'] = decoded_token.get('picture', '')
             
-            print(f"💾 Session stored - User ID: {session['user_id']}")
-            print(f"💾 Session stored - Email: {session['user_email']}")
-            print(f"💾 Session stored - Display Name: {session['user_display_name']}")
-            print(f"💾 Session stored - Photo URL: {session['user_photo_url']}")
-            
             return jsonify({
                 'success': True,
                 'message': 'Login successful',
+                'redirect': '/',
                 'user': {
                     'uid': decoded_token['uid'],
                     'email': decoded_token.get('email', ''),
@@ -231,7 +208,6 @@ def api_login():
                 }
             })
         else:
-            print("❌ Token verification failed")
             return jsonify({'error': 'Invalid token'}), 401
             
     except Exception as e:
@@ -262,10 +238,12 @@ def api_register():
             return jsonify({
                 'success': True,
                 'message': 'Registration successful',
+                'redirect': '/',
                 'user': {
                     'uid': decoded_token['uid'],
                     'email': decoded_token.get('email', ''),
                     'display_name': decoded_token.get('name', ''),
+                    'handle': decoded_token.get('name', ''),
                     'photo_url': decoded_token.get('picture', '')
                 }
             })
@@ -514,7 +492,6 @@ def auth_status():
         
         # Get user info from Firebase
         user_info = firebase_service.get_user_by_uid(user_id)
-        print(f"📱 Firebase user info: {user_info}")
         
         if user_info:
             response_data = {
@@ -524,7 +501,8 @@ def auth_status():
                     'uid': user_id,
                     'email': user_info.get('email', ''),
                     'display_name': user_info.get('display_name', ''),
-                    'photo_url': user_info.get('photo_url', '')
+                    'photo_url': user_info.get('photo_url', ''),
+                    'role': user_info.get('role', 'subscriber')
                 }
             }
             print(f"🎯 Returning Firebase user data: {response_data}")
@@ -538,10 +516,10 @@ def auth_status():
                     'uid': user_id,
                     'email': session.get('user_email', ''),
                     'display_name': session.get('user_display_name', ''),
-                    'photo_url': session.get('user_photo_url', '')
+                    'photo_url': session.get('user_photo_url', ''),
+                    'role': 'subscriber'  # Default role for session fallback
                 }
             }
-            print(f"🔄 Returning session user data: {response_data}")
             return jsonify(response_data)
     else:
         print("❌ No user_id in session")
@@ -1010,9 +988,7 @@ def analyze_menu_image():
         data = request.get_json()
         image_base64 = data.get('image')
         language = data.get('language', 'tr')
-        
-        print(f"🔍 AI analysis request received: language={language}, image_size={len(image_base64) if image_base64 else 0}")
-        
+                
         if not image_base64:
             return jsonify({'error': 'Image data is required'}), 400
         
@@ -1024,7 +1000,6 @@ def analyze_menu_image():
         return jsonify(suggestions)
         
     except Exception as e:
-        print(f"❌ Error analyzing menu image: {e}")
         return jsonify({'error': str(e)}), 500
 
 # Test AI endpoint

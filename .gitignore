@@ -131,3 +131,4 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+keys/serviceAccount.json

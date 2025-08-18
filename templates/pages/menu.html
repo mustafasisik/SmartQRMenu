@@ -1,0 +1,958 @@
+{% extends "landing_base.html" %}
+
+{% block title %}{{ restaurant.name }} - Menü{% endblock %}
+
+{% block extra_head %}
+<style>
+    .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    /* AI Chatbot Styles */
+    .chat-message {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .loading-dots {
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative py-20 bg-gradient-to-br from-primary to-secondary">
+    <div class="absolute inset-0 bg-black/20"></div>
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
+        <h1 class="text-5xl font-bold mb-4">{{ restaurant.name }}</h1>
+        {% if restaurant.description %}
+        <p class="text-lg max-w-3xl mx-auto leading-relaxed">{{ restaurant.description }}</p>
+        {% endif %}
+        
+        <!-- Quick Info Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            {% if restaurant.address %}
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-6">
+                <div class="text-3xl mb-2">📍</div>
+                <h3 class="font-semibold mb-2">Adres</h3>
+                <p class="text-sm">{{ restaurant.address }}</p>
+            </div>
+            {% endif %}
+            {% if restaurant.phone %}
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-6">
+                <div class="text-3xl mb-2">📞</div>
+                <h3 class="font-semibold mb-2">İletişim</h3>
+                <p class="text-sm">{{ restaurant.phone }}</p>
+            </div>
+            {% endif %}
+            {% if restaurant.hours %}
+            <div class="bg-white/20 backdrop-blur-sm rounded-lg p-6">
+                <div class="text-3xl mb-2">🕒</div>
+                <h3 class="font-semibold mb-2">Çalışma Saatleri</h3>
+                <p class="text-sm">
+                    {% if restaurant.hours.open and restaurant.hours.close %}
+                        {{ restaurant.hours.open }} - {{ restaurant.hours.close }}
+                    {% else %}
+                        Bilgi yok
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Restaurant Info Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Basic Info -->
+            <div>
+                <h2 class="text-3xl font-bold text-gray-900 mb-8">Restoran Bilgileri</h2>
+                <div class="space-y-6">
+                    {% if restaurant.cuisineTypes %}
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">🍽️</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">Mutfak Türü</h4>
+                            <p class="text-gray-600">{{ restaurant.cuisineTypes|join(', ') }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if restaurant.website %}
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">🌐</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">Website</h4>
+                            <a href="{{ restaurant.website }}" target="_blank" class="text-primary hover:underline">{{ restaurant.website }}</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if restaurant.email %}
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">✉️</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">E-posta</h4>
+                            <p class="text-gray-600">{{ restaurant.email }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                {% if restaurant.tags %}
+                <div class="mt-8">
+                    <h4 class="font-semibold text-gray-900 mb-4">Özellikler</h4>
+                    <div class="flex flex-wrap gap-2">
+                        {% for tag in restaurant.tags %}
+                        <span class="px-3 py-1 bg-accent text-sm text-gray-700 rounded-full">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- QR Code Section -->
+            <div class="bg-gradient-to-br from-primary/20 to-secondary/20 rounded-3xl p-8">
+                <div class="text-center">
+                    <div class="w-32 h-32 bg-white rounded-2xl mx-auto mb-6 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">📱</div>
+                            <div class="text-sm text-gray-600">QR Kod</div>
+                        </div>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Dijital Menü</h3>
+                    <p class="text-gray-600 mb-4">QR kodu okutarak menüye erişin</p>
+                    <button class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-dark transition-colors">
+                        QR Kod Oluştur
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Menu Section -->
+<section class="py-20 bg-accent">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-gray-900 mb-4">
+                Lezzetli 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
+                    Menümüz
+                </span>
+            </h2>
+            <p class="text-xl text-gray-600">Geleneksel lezzetler, modern sunum</p>
+        </div>
+        
+
+        
+        <div id="menu-container" class="space-y-12 min-h-96">
+            <!-- Menu will be loaded here dynamically -->
+            <div class="text-center py-8 text-gray-500">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p>Menü yükleniyor...</p>
+            </div>
+        </div>
+        
+        <div id="no-menu" class="text-center py-12 hidden">
+            <div class="text-gray-500">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-lg font-medium text-gray-900 mb-2">Henüz menü eklenmemiş</p>
+                <p class="text-gray-500">Yakında burada harika lezzetler göreceksiniz!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AI Chatbot Section -->
+<section class="py-20 bg-gradient-to-br from-gray-900 to-gray-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-white mb-4">
+                AI Garson ile 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                    Sohbet Edin
+                </span>
+            </h2>
+            <p class="text-xl text-gray-300">Restoran hakkında herhangi bir soru sorun, size yardımcı olayım!</p>
+            
+            <!-- Authentication Required Notice -->
+            <div id="auth-notice" class="mt-6 bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-4 max-w-md mx-auto">
+                <div class="flex items-center justify-center space-x-2 text-yellow-300">
+                    <span>🔒</span>
+                    <span class="text-sm">AI garsonı kullanmak için giriş yapmanız gerekiyor</span>
+                </div>
+                <div class="mt-3 flex justify-center space-x-3">
+                    <a href="/login" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Giriş Yap
+                    </a>
+                    <a href="/register" class="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Kayıt Ol
+                    </a>
+                </div>
+            </div>
+            
+            <!-- AI Status Indicator -->
+            <div id="aiStatus" class="mt-4 inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                <div class="w-2 h-2 rounded-full mr-2 bg-green-400"></div>
+                <span>AI Garson Hazır</span>
+            </div>
+        </div>
+        
+        <div id="chatContainer" class="hidden">
+            <div class="bg-white rounded-2xl p-8 shadow-2xl">
+                <!-- Usage Statistics -->
+                <div id="usageStats" class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border-2 border-blue-200 shadow-sm">
+                    <h4 class="font-bold text-blue-900 mb-3 text-center">📊 Günlük Mesaj Limiti</h4>
+                    <div class="text-center p-4 bg-white rounded-lg border border-blue-200">
+                        <div class="text-blue-700 font-medium text-lg mb-2">🌍 Günlük Mesaj Hakkı</div>
+                        <div id="dailyUsage" class="text-3xl font-bold text-blue-900 mb-2">0/10</div>
+                        <div class="text-sm text-blue-600">Kalan: <span id="dailyRemaining" class="font-semibold">10</span> mesaj</div>
+                    </div>
+                    <div class="mt-3 text-center text-xs text-gray-600 bg-white p-2 rounded border">
+                        ⚠️ Limit her gün sıfırlanır. Dikkatli kullanın!
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Örnek Sorular:</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="askQuestion('Bu restoranın en popüler yemeği nedir?')" 
+                                class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                            En popüler yemek nedir?
+                        </button>
+                        <button onclick="askQuestion('Çalışma saatleri nedir?')" 
+                                class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                            Çalışma saatleri nedir?
+                        </button>
+                        <button onclick="askQuestion('Vegan seçenekler var mı?')" 
+                                class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                            Vegan seçenekler var mı?
+                        </button>
+                        <button onclick="askQuestion('Rezervasyon yapabilir miyim?')" 
+                                class="px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm hover:bg-primary/20 transition-colors">
+                            Rezervasyon yapabilir miyim?
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="flex space-x-4">
+                        <div class="flex-1 relative">
+                            <input type="text" id="questionInput" placeholder="Restoran hakkında bir soru sorun... (max 150 karakter)" 
+                                   maxlength="150"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <div class="absolute right-2 top-2 text-xs text-gray-400">
+                                <span id="charCount">0</span>/150
+                            </div>
+                        </div>
+                        <button onclick="sendQuestion()" 
+                                class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white font-semibold rounded-lg hover:shadow-lg transition-all duration-300">
+                            Gönder
+                        </button>
+                    </div>
+                    
+                    <div id="chatHistory" class="space-y-4 max-h-96 overflow-y-auto">
+                        <!-- Chat messages will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact & Hours Section -->
+<section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Contact Info -->
+            <div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-8">İletişim Bilgileri</h3>
+                <div class="space-y-6">
+                    {% if restaurant.address %}
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">📍</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">Adres</h4>
+                            <p class="text-gray-600">{{ restaurant.address }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if restaurant.phone %}
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">📞</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">Telefon</h4>
+                            <p class="text-gray-600">{{ restaurant.phone }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if restaurant.email %}
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">✉️</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">E-posta</h4>
+                            <p class="text-gray-600">{{ restaurant.email }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Working Hours -->
+            <div>
+                <h3 class="text-3xl font-bold text-gray-900 mb-8">Çalışma Saatleri</h3>
+                <div class="bg-accent rounded-2xl p-6">
+                    {% if restaurant.hours and restaurant.hours.open and restaurant.hours.close %}
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-200">
+                            <span class="font-medium text-gray-900">Açılış</span>
+                            <span class="text-gray-600">{{ restaurant.hours.open }}</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="font-medium text-gray-900">Kapanış</span>
+                            <span class="text-gray-600">{{ restaurant.hours.close }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-gray-500 py-8">
+                        <p>Çalışma saatleri bilgisi mevcut değil</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Load restaurant menu
+    async function loadRestaurantMenu() {
+        try {
+            console.log('🔄 Loading menu for restaurant:', restaurantSlug);
+            console.log('🔍 Menu container element:', document.getElementById('menu-container'));
+            console.log('🔍 No-menu element:', document.getElementById('no-menu'));
+            
+
+            
+            try {
+                const response = await fetch(`/api/restaurants/${restaurantSlug}/menu`);
+                console.log('📡 Menu API response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('📋 Menu data received:', data);
+                console.log('📊 Menu data type:', typeof data);
+                console.log('📊 Menu data keys:', Object.keys(data));
+                
+                if (data.menu && data.menu.categories && data.menu.categories.length > 0) {
+                    console.log('✅ Menu found, displaying categories:', data.menu.categories.length);
+                    console.log('📋 Menu data structure:', data.menu);
+                    
+                    const menuContainer = document.getElementById('menu-container');
+                    const noMenu = document.getElementById('no-menu');
+                    
+                    console.log('🏗️ Menu container before update:', menuContainer);
+                    console.log('🏗️ No-menu element before update:', noMenu);
+                    
+                    // Clear existing content and add menu header
+                    menuContainer.innerHTML = '';
+                    console.log('🧹 Menu container cleared');
+                    
+                    // Add menu header
+                    if (data.menu.name || data.menu.description) {
+                        const menuHeader = document.createElement('div');
+                        menuHeader.className = 'text-center mb-12';
+                        menuHeader.innerHTML = `
+                            <h2 class="text-3xl font-bold text-gray-900 mb-4">${data.menu.name || 'Menü'}</h2>
+                            ${data.menu.description ? `<p class="text-lg text-gray-600 max-w-3xl mx-auto">${data.menu.description}</p>` : ''}
+                        `;
+                        menuContainer.appendChild(menuHeader);
+                        console.log('📋 Menu header added');
+                    }
+                    
+                    // Add each category
+                    data.menu.categories.forEach((category, index) => {
+                        console.log(`🍽️ Processing category ${index + 1}:`, category);
+                        const categorySection = createCategorySection(category);
+                        console.log('🏗️ Category section created:', categorySection);
+                        menuContainer.appendChild(categorySection);
+                        console.log(`✅ Category ${index + 1} added to container`);
+                    });
+                    
+                    // Add success message
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'text-center py-4 text-green-600';
+                    successDiv.innerHTML = `
+                        <div class="flex items-center justify-center space-x-2">
+                            <span>✅</span>
+                            <span>Menü başarıyla yüklendi! ${data.menu.categories.length} kategori bulundu.</span>
+                        </div>
+                    `;
+                    menuContainer.appendChild(successDiv);
+                    
+                    // Final check
+                    console.log('🎯 Final menu container children count:', menuContainer.children.length);
+                    
+                    console.log('🎯 Menu container updated, hiding no-menu message');
+                    noMenu.classList.add('hidden');
+                    console.log('🎯 No-menu element hidden');
+                    
+
+                    
+                    return;
+                } else {
+                    console.log('⚠️ No menu data from API');
+                    throw new Error('No menu data received');
+                }
+            } catch (apiError) {
+                console.log('⚠️ API failed:', apiError.message);
+                // Show no menu message
+                const noMenu = document.getElementById('no-menu');
+                noMenu.classList.remove('hidden');
+                
+                throw apiError;
+            }
+            
+        } catch (error) {
+            console.error('❌ Error loading restaurant menu:', error);
+            const noMenu = document.getElementById('no-menu');
+            noMenu.classList.remove('hidden');
+            
+
+        }
+    }
+    
+    // Create category section
+    function createCategorySection(category) {
+        console.log('🏗️ Creating category section for:', category.name);
+        console.log('📝 Category products count:', category.products ? category.products.length : 0);
+        console.log('📝 Category data:', category);
+        
+        const section = document.createElement('div');
+        const productsHtml = category.products ? category.products.map(product => createMenuItem(product)).join('') : '';
+        
+        section.innerHTML = `
+            <div class="mb-12">
+                <h3 class="text-2xl font-bold text-gray-900 mb-8 text-center">${category.name || 'Kategori'}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${productsHtml}
+                </div>
+            </div>
+        `;
+        
+        console.log('✅ Category section created for:', category.name);
+        console.log('🏗️ Section element:', section);
+        return section;
+    }
+    
+    // Create menu item
+    function createMenuItem(product) {
+        console.log('🍽️ Creating menu product:', product.name);
+        
+        const name = product.name || 'İsimsiz Ürün';
+        const price = product.price ? `₺${product.price}` : 'Fiyat belirtilmemiş';
+        const description = product.description || '';
+        const isVegetarian = product.vegetarian || false;
+        const isSpicy = product.spicy || false;
+        const isAvailable = product.available !== false; // Default to true if not specified
+        
+        const menuItemHtml = `
+            <div class="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 ${!isAvailable ? 'opacity-60' : ''}">
+                <div class="flex justify-between items-start mb-4">
+                    <h4 class="text-xl font-semibold text-gray-900">${name}</h4>
+                    <span class="text-lg font-bold text-primary">${price}</span>
+                </div>
+                ${description ? `<p class="text-gray-600 mb-4">${description}</p>` : ''}
+                
+                <div class="flex flex-wrap gap-2 mb-4">
+                    ${isVegetarian ? `<div class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        🌱 Vejetaryen
+                        </div>` : ''}
+                    ${isSpicy ? `<div class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                        🌶️ Baharatlı
+                        </div>` : ''}
+                    ${!isAvailable ? `<div class="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                        ❌ Mevcut Değil
+                        </div>` : ''}
+                </div>
+            </div>
+        `;
+        
+        console.log('✅ Menu product HTML created for:', name);
+        return menuItemHtml;
+    }
+    
+    // Get restaurant slug from URL
+    const restaurantSlug = window.location.pathname.split('/').pop();
+    console.log('🔍 Restaurant slug extracted from URL:', restaurantSlug);
+    
+    // If no slug found, show error
+    if (!restaurantSlug) {
+        console.error('❌ No restaurant slug found in URL');
+    }
+    
+    // Validate slug format
+    if (restaurantSlug === 'menu') {
+        console.error('❌ Invalid restaurant slug, got "menu" instead of actual slug');
+    }
+    
+    // Load menu on page load
+    window.onload = function() {
+        console.log('🚀 Page loaded, starting initialization...');
+        console.log('📍 Current URL:', window.location.href);
+        console.log('🔍 Restaurant slug:', restaurantSlug);
+        console.log('🔍 Menu container element:', document.getElementById('menu-container'));
+        console.log('🔍 No-menu element:', document.getElementById('no-menu'));
+        
+        // Load menu first
+        console.log('🍽️ Calling loadRestaurantMenu()...');
+        loadRestaurantMenu();
+        
+        // Then check auth status
+        setTimeout(() => {
+            console.log('🔐 Calling checkAuthStatus()...');
+            checkAuthStatus();
+        }, 1000); // Small delay to ensure menu is loaded first
+    };
+    
+    // AI Chatbot Functions
+    function askQuestion(question) {
+        document.getElementById('questionInput').value = question;
+        sendQuestion();
+    }
+    
+    function sendQuestion() {
+        const questionInput = document.getElementById('questionInput');
+        const question = questionInput.value.trim();
+        
+        if (!question) return;
+        
+        // Check character limit
+        if (question.length > 150) {
+            addMessage('assistant', 'Soru çok uzun. Maksimum 150 karakter kullanabilirsiniz.');
+            return;
+        }
+        
+        // Check current usage stats before sending
+        const dailyUsage = document.getElementById('dailyUsage');
+        
+        if (dailyUsage) {
+            const dailyText = dailyUsage.textContent;
+            const dailyUsed = parseInt(dailyText.split('/')[0]);
+            const dailyLimit = parseInt(dailyText.split('/')[1]);
+            
+            // Check daily limit
+            if (dailyUsed >= dailyLimit) {
+                addMessage('assistant', '🚫 Günlük mesaj limitiniz doldu (10 mesaj). Yarın tekrar deneyin.');
+                return;
+            }
+        }
+        
+        // Add user question to chat
+        addMessage('user', question);
+        questionInput.value = '';
+        document.getElementById('charCount').textContent = '0'; // Reset character counter
+        
+        // Show loading
+        addMessage('assistant', 'Düşünüyorum...', true);
+        
+        // Create context for AI
+        const aiContext = createAIContext();
+        const restaurantInfo = `Restoran: ${restaurantName || 'Bilinmeyen'}\nSlug: ${restaurantSlug}`;
+        
+        // Send to API with context
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                question: question,
+                context: aiContext,
+                restaurant_info: restaurantInfo
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('📡 Chat API response:', data);
+            
+            // Remove loading message
+            removeLastMessage();
+            
+            if (data.error) {
+                console.log('❌ Chat API error:', data.error);
+                // Check if it's a limit error
+                if (data.error.includes('limit') || data.error.includes('doldu')) {
+                    addMessage('assistant', `🚫 ${data.error}\n\n💡 Limit bilgileri güncellendi.`);
+                    
+                    // Update usage display with limits
+                    if (data.limits) {
+                        console.log('📊 Updating usage display with limits:', data.limits);
+                        updateUsageDisplay(data.limits);
+                    }
+                } else {
+                    addMessage('assistant', 'Üzgünüm, bir hata oluştu: ' + data.error);
+                }
+            } else {
+                console.log('✅ Chat API success, updating usage stats:', data.usage_stats);
+                addMessage('assistant', data.answer);
+                
+                // Update usage stats if provided
+                if (data.usage_stats) {
+                    updateUsageDisplay(data.usage_stats);
+                }
+            }
+        })
+        .catch(error => {
+            removeLastMessage();
+            addMessage('assistant', 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.');
+        });
+    }
+    
+    function addMessage(sender, message, isLoading = false) {
+        const chatHistory = document.getElementById('chatHistory');
+        
+        // Check for duplicate messages (especially for assistant messages)
+        if (sender === 'assistant' && !isLoading) {
+            const lastMessage = chatHistory.lastElementChild;
+            if (lastMessage) {
+                const lastMessageText = lastMessage.querySelector('div').textContent;
+                if (lastMessageText === message) {
+                    console.log('⚠️ Duplicate message detected, skipping...');
+                    return;
+                }
+            }
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+        
+        const messageBubble = document.createElement('div');
+        messageBubble.className = `max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+            sender === 'user' 
+                ? 'bg-primary text-white' 
+                : 'bg-gray-100 text-gray-800'
+        }`;
+        
+        if (isLoading) {
+            messageBubble.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                    <span>${message}</span>
+                </div>
+            `;
+        } else {
+            messageBubble.textContent = message;
+        }
+        
+        messageDiv.appendChild(messageBubble);
+        chatHistory.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+        
+        // Store message in local storage for context
+        storeMessage(sender, message);
+    }
+    
+    // Store message in local storage for context
+    function storeMessage(sender, message) {
+        const messages = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+        messages.push({
+            role: sender,
+            content: message,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Keep only last 20 messages
+        if (messages.length > 20) {
+            messages.splice(0, messages.length - 20);
+        }
+        
+        localStorage.setItem('chatHistory', JSON.stringify(messages));
+    }
+    
+    function removeLastMessage() {
+        const chatHistory = document.getElementById('chatHistory');
+        if (chatHistory.lastChild) {
+            chatHistory.removeChild(chatHistory.lastChild);
+        }
+    }
+    
+    // Check authentication status
+    async function checkAuthStatus() {
+        try {
+            console.log('🔐 Menu page: Checking auth status...');
+            const response = await fetch('/api/auth/status');
+            console.log('📡 Auth API response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('👤 Menu page: Auth status response:', data);
+            
+            if (data.authenticated) {
+                // User is authenticated, show AI chatbot
+                console.log('✅ Menu page: User authenticated, showing chatbot');
+                document.getElementById('auth-notice').classList.add('hidden');
+                document.getElementById('chatContainer').classList.remove('hidden');
+                checkAIStatus();
+                loadUsageStats(); // Load usage statistics
+                // Simple greeting without AI context - only if no previous messages
+                const chatHistory = document.getElementById('chatHistory');
+                if (chatHistory.children.length === 0) {
+                    addMessage('assistant', `Merhaba! Ben ${restaurantName || 'restoranın'} AI garsonıyım. Size nasıl yardımcı olabilirim?`);
+                }
+                
+                // Update navbar to show user info
+                updateNavbar(data.user);
+            } else {
+                // User is not authenticated, hide AI chatbot
+                console.log('❌ Menu page: User not authenticated, showing auth notice');
+                document.getElementById('auth-notice').classList.remove('hidden');
+                document.getElementById('chatContainer').classList.add('hidden');
+                checkAIStatus(); // Still check AI status for display
+                
+                // Update navbar to show auth links
+                updateNavbar(null);
+            }
+        } catch (error) {
+            console.error('💥 Menu page: Auth status check failed:', error);
+            // Show auth notice on error
+            document.getElementById('auth-notice').classList.remove('hidden');
+            document.getElementById('chatContainer').classList.add('hidden');
+            
+            // Update navbar to show auth links on error
+            updateNavbar(null);
+        }
+    }
+    
+    // Update navbar based on authentication status
+    function updateNavbar(user) {
+        try {
+            console.log('Menu page: Updating navbar with user:', user);
+            
+            // Get loading state elements
+            const navbarLoading = document.getElementById('navbar-loading');
+            const mobileNavbarLoading = document.getElementById('mobile-navbar-loading');
+            
+            if (user) {
+                // User is authenticated, show user menu
+                const authLinks = document.getElementById('auth-links');
+                const userMenu = document.getElementById('user-menu');
+                const mobileAuthLinks = document.getElementById('mobile-auth-links');
+                const mobileUserMenu = document.getElementById('mobile-user-menu');
+                
+                if (authLinks && userMenu && mobileAuthLinks && mobileUserMenu) {
+                    // Hide loading states first
+                    if (navbarLoading) navbarLoading.classList.add('hidden');
+                    if (mobileNavbarLoading) mobileNavbarLoading.classList.add('hidden');
+                    
+                    // Desktop
+                    authLinks.classList.add('hidden');
+                    userMenu.classList.remove('hidden');
+                    
+                    // Update user info
+                    const userName = document.getElementById('user-name');
+                    const userEmail = document.getElementById('user-email');
+                    const userAvatar = document.getElementById('user-avatar');
+                    const mobileUserName = document.getElementById('mobile-user-name');
+                    const mobileUserEmail = document.getElementById('mobile-user-email');
+                    const mobileUserAvatar = document.getElementById('mobile-user-avatar');
+                    
+                    if (userName && userEmail && userAvatar && mobileUserName && mobileUserEmail && mobileUserAvatar) {
+                        const displayName = user.display_name || user.email || 'Kullanıcı';
+                        const email = user.email || '';
+                        const photoUrl = user.photo_url || '/static/images/default-avatar.svg';
+                        
+                        userName.textContent = displayName;
+                        userEmail.textContent = email;
+                        userAvatar.src = photoUrl;
+                        
+                        mobileUserName.textContent = displayName;
+                        mobileUserEmail.textContent = email;
+                        mobileUserAvatar.src = photoUrl;
+                        
+                        console.log('Menu page: Navbar updated with user info');
+                    }
+                    
+                    // Mobile
+                    mobileAuthLinks.classList.add('hidden');
+                    mobileUserMenu.classList.remove('hidden');
+                }
+            } else {
+                // User is not authenticated, show auth links
+                const authLinks = document.getElementById('auth-links');
+                const userMenu = document.getElementById('user-menu');
+                const mobileAuthLinks = document.getElementById('mobile-auth-links');
+                const mobileUserMenu = document.getElementById('mobile-user-menu');
+                
+                if (authLinks && userMenu && mobileAuthLinks && mobileUserMenu) {
+                    // Hide loading states first
+                    if (navbarLoading) navbarLoading.classList.add('hidden');
+                    if (mobileNavbarLoading) mobileNavbarLoading.classList.add('hidden');
+                    
+                    // Desktop
+                    authLinks.classList.remove('hidden');
+                    userMenu.classList.add('hidden');
+                    
+                    // Mobile
+                    mobileAuthLinks.classList.remove('hidden');
+                    mobileUserMenu.classList.add('hidden');
+                    
+                    console.log('Menu page: Navbar updated with auth links');
+                }
+            }
+        } catch (error) {
+            console.error('Menu page: Error updating navbar:', error);
+        }
+    }
+    
+    // Load usage statistics
+    async function loadUsageStats() {
+        try {
+            const response = await fetch('/api/usage/stats');
+            if (response.ok) {
+                const data = await response.json();
+                updateUsageDisplay(data.usage_stats);
+            }
+        } catch (error) {
+            console.error('Failed to load usage stats:', error);
+        }
+    }
+    
+    // Update usage display
+    function updateUsageDisplay(stats) {
+        document.getElementById('dailyUsage').textContent = `${stats.daily_used}/${stats.daily_limit}`;
+        document.getElementById('dailyRemaining').textContent = stats.daily_remaining;
+        
+        // Change color based on usage
+        const dailyElement = document.getElementById('dailyUsage');
+        
+        if (stats.daily_used >= stats.daily_limit * 0.8) {
+            dailyElement.className = 'text-3xl font-bold text-red-600';
+        } else if (stats.daily_used >= stats.daily_limit * 0.6) {
+            dailyElement.className = 'text-3xl font-bold text-yellow-600';
+        } else {
+            dailyElement.className = 'text-3xl font-bold text-blue-900';
+        }
+    }
+    
+    // Check AI service status - Simplified
+    function checkAIStatus() {
+        // AI is always ready, no need to check external status
+        const statusDiv = document.getElementById('aiStatus');
+        statusDiv.className = 'mt-4 inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800';
+        const statusDot = statusDiv.querySelector('div');
+        const statusText = statusDiv.querySelector('span');
+        
+        statusDot.className = 'w-2 h-2 rounded-full mr-2 bg-green-400';
+        statusText.textContent = 'AI Garson Hazır';
+    }
+    
+    // Character counter for input
+    document.getElementById('questionInput').addEventListener('input', function(e) {
+        const charCount = e.target.value.length;
+        document.getElementById('charCount').textContent = charCount;
+        
+        // Change color based on character count
+        const charCountElement = document.getElementById('charCount');
+        if (charCount >= 135) {  // 90% of 150
+            charCountElement.className = 'text-xs text-red-500';
+        } else if (charCount >= 120) {  // 80% of 150
+            charCountElement.className = 'text-xs text-yellow-500';
+        } else {
+            charCountElement.className = 'text-xs text-gray-400';
+        }
+    });
+    
+    // Enter key to send message
+    document.getElementById('questionInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendQuestion();
+        }
+    });
+    
+    // Get restaurant name for AI greeting
+    const restaurantName = '{{ restaurant.name }}';
+    
+    // Create AI context with menu and restaurant information
+    function createAIContext() {
+        const menuContainer = document.getElementById('menu-container');
+        if (!menuContainer || menuContainer.children.length === 0) {
+            return '';
+        }
+        
+        let context = '\n\n📋 **Mevcut Menü Bilgileri:**\n';
+        
+        // Extract menu information from DOM
+        const categories = menuContainer.querySelectorAll('h3');
+        categories.forEach((category, index) => {
+            const categoryName = category.textContent;
+            const itemsContainer = category.nextElementSibling;
+            const products = itemsContainer.querySelectorAll('.bg-white');
+            
+            context += `\n🍽️ **${categoryName}:**\n`;
+            products.forEach(product => {
+                const productName = product.querySelector('h4').textContent;
+                const productPrice = product.querySelector('.text-primary').textContent;
+                const productDescription = product.querySelector('p');
+                const description = productDescription ? productDescription.textContent : '';
+                
+                context += `   • ${productName} - ${productPrice}`;
+                if (description) {
+                    context += ` (${description})`;
+                }
+                context += '\n';
+            });
+        });
+        
+        context += '\n💡 **Örnek Sorular:**\n';
+        context += '• "En popüler yemekler hangileri?"\n';
+        context += '• "Vejetaryen seçenekler var mı?"\n';
+        context += '• "Fiyat aralığı nedir?"\n';
+        context += '• "Hangi yemekler baharatlı?"\n';
+        context += '• "Tost çeşitleri neler?"\n';
+        
+        return context;
+    }
+</script>
+{% endblock %}

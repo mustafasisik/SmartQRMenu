@@ -205,9 +205,15 @@
                 <!-- Additional Settings -->
                 <div class="border-b border-gray-200 pb-6">
                     <h4 class="text-lg font-medium text-gray-900 mb-4">Ek Ayarlar</h4>
-                    <div class="flex items-center">
-                        <input type="checkbox" id="isActive" name="isActive" checked class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
-                        <label for="isActive" class="ml-2 text-sm text-gray-700">Restoran Aktif</label>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="isActive" name="isActive" checked class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="isActive" class="ml-2 text-sm text-gray-700">Restoran Aktif</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="featured" name="featured" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="featured" class="ml-2 text-sm text-gray-700">Öne Çıkan Restoran</label>
+                        </div>
                     </div>
                 </div>
                 
@@ -456,6 +462,10 @@ function displayRestaurants(restaurants) {
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
+                    <a href="/menu/${restaurant.slug || restaurant.id}" target="_blank" 
+                       class="text-green-600 hover:text-green-800 transition-colors" title="Menüyü Gör">
+                        Menü
+                    </a>
                     <button onclick="editRestaurant('${restaurant.slug || restaurant.id}')" 
                             class="text-blue-600 hover:text-blue-800 transition-colors">
                         Düzenle
@@ -560,6 +570,7 @@ function openRestaurantModal(restaurant = null) {
         
         // Additional Settings
         document.getElementById('isActive').checked = restaurant.isActive !== false;
+        document.getElementById('featured').checked = restaurant.featured === true;
         
         // Owner and Editors
         if (restaurant.owner) {
@@ -660,6 +671,7 @@ async function saveRestaurant(e) {
             
             // Additional settings
             isActive: restaurantData.isActive === 'on',
+            featured: restaurantData.featured === 'on',
             
                     // Owner and editor (will be processed by backend)
         owner: {

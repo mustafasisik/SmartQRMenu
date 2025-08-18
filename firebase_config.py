@@ -4,6 +4,7 @@ import time
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from config import Config
+from gemini_service import GeminiAIService
 
 class FirebaseService:
     """Firebase service for authentication and database operations"""
@@ -20,12 +21,31 @@ class FirebaseService:
             if not firebase_admin._apps:
                 # Check if service account key file exists
                 service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH')
+                if not service_account_path:
+                    # Try to use default path
+                    service_account_path = 'keys/serviceAccount.json'
+                
                 if service_account_path and os.path.exists(service_account_path):
+                    print(f"🔑 Using service account: {service_account_path}")
                     cred = credentials.Certificate(service_account_path)
                     self.admin_app = firebase_admin.initialize_app(cred)
                 else:
+                    print("⚠️ No service account found, trying environment variables")
                     # Use environment variables for Firebase config
                     self.admin_app = firebase_admin.initialize_app()
+                print("✅ Firebase Admin SDK initialized successfully")
+            else:
+                # Use existing app
+                existing_apps = list(firebase_admin._apps.keys())
+                print(f"📱 Existing Firebase apps: {existing_apps}")
+                if '__default__' in firebase_admin._apps:
+                    self.admin_app = firebase_admin._apps['__default__']
+                    print("✅ Using existing default Firebase Admin SDK app")
+                else:
+                    # Use the first available app
+                    first_app_name = list(firebase_admin._apps.keys())[0]
+                    self.admin_app = firebase_admin._apps[first_app_name]
+                    print(f"✅ Using existing Firebase app: {first_app_name}")
             
             # Initialize Firebase Auth
             if self.admin_app:
@@ -53,6 +73,21 @@ class FirebaseService:
                 print("✅ Firebase Admin SDK initialized successfully")
             else:
                 print("⚠️ Firebase configuration incomplete. Some features will be disabled.")
+            
+            # Additional check for Firestore DB
+            if not self.firestore_db:
+                print("❌ Firestore DB initialization failed")
+                self.is_available = False
+            else:
+                print("✅ Firestore DB is available")
+            
+            # Initialize Gemini AI service
+            try:
+                self.gemini_service = GeminiAIService()
+                print("✅ Gemini AI service initialized successfully")
+            except Exception as ai_error:
+                print(f"⚠️ Gemini AI service initialization failed: {ai_error}")
+                self.gemini_service = None
                 
         except Exception as e:
             print(f"❌ Failed to initialize Firebase: {e}")
@@ -190,6 +225,85 @@ class FirebaseService:
             print(f"Failed to get all restaurants: {e}")
             return []
     
+    def get_featured_restaurants(self):
+        """Get featured restaurants from Firestore"""
+        if not self.firestore_db:
+            return []
+        
+        try:
+            restaurants = []
+            restaurants_ref = self.firestore_db.collection('restaurants').where('featured', '==', True).where('isActive', '==', True).stream()
+            
+            for restaurant_doc in restaurants_ref:
+                restaurant_data = restaurant_doc.to_dict()
+                restaurant_data['id'] = restaurant_doc.id
+                restaurants.append(restaurant_data)
+            
+            print(f"✅ Retrieved {len(restaurants)} featured restaurants")
+            return restaurants
+            
+        except Exception as e:
+            print(f"❌ Error getting featured restaurants: {e}")
+            return []
+    
+    def get_restaurant_by_slug(self, slug):
+        """Get restaurant by slug from Firestore"""
+        if not self.firestore_db:
+            return None
+        
+        try:
+            restaurant_doc = self.firestore_db.collection('restaurants').document(slug).get()
+            
+            if restaurant_doc.exists:
+                restaurant_data = restaurant_doc.to_dict()
+                restaurant_data['id'] = restaurant_doc.id
+                print(f"✅ Retrieved restaurant: {restaurant_data.get('name', 'Unknown')}")
+                return restaurant_data
+            else:
+                print(f"❌ Restaurant not found with slug: {slug}")
+                return None
+                
+        except Exception as e:
+            print(f"❌ Error getting restaurant by slug: {e}")
+            return None
+    
+    def get_restaurant_menu(self, restaurant_slug):
+        """Get restaurant menu from Firestore"""
+        if not self.firestore_db:
+            print("❌ Firestore DB not available")
+            return []
+        
+        try:
+            print(f"🍽️ Getting menu for restaurant: {restaurant_slug}")
+            
+            # Query menus collection by restaurantId and language
+            menus_query = self.firestore_db.collection('menus').where('restaurantId', '==', restaurant_slug).where('language', '==', 'tr').where('isActive', '==', True)
+            menus = list(menus_query.stream())
+            
+            if menus:
+                # Get the first active menu for this restaurant
+                menu_doc = menus[0]
+                menu_data = menu_doc.to_dict()
+                print(f"✅ Retrieved real menu from Firestore for restaurant: {restaurant_slug}")
+                print(f"📋 Menu ID: {menu_doc.id}")
+                print(f"📋 Menu has {len(menu_data.get('categories', []))} categories")
+                print(f"📋 Menu language: {menu_data.get('language', 'unknown')}")
+                print(f"📋 Menu data: {menu_data}")
+                # Return full menu data including name, description, and categories
+                return {
+                    'name': menu_data.get('name', ''),
+                    'description': menu_data.get('description', ''),
+                    'categories': menu_data.get('categories', [])
+                }
+            else:
+                print(f"⚠️ No active menu found in Firestore for {restaurant_slug} with language 'tr'")
+                print(f"🔍 Query: restaurantId={restaurant_slug}, language=tr, isActive=true")
+                return []
+            
+        except Exception as e:
+            print(f"❌ Error getting restaurant menu: {e}")
+            return []
+    
     def create_restaurant(self, restaurant_data):
         """Create new restaurant in Firestore"""
         if not self.firestore_db:
@@ -234,6 +348,7 @@ class FirebaseService:
                 'address': restaurant_data.get('address'),
                 'hours': restaurant_data.get('hours', {}),
                 'isActive': restaurant_data.get('isActive', True),
+                'featured': restaurant_data.get('featured', False),
                 'owner': owner_data,
                 'editor': editor_data,
                 'slug': slug,
@@ -277,6 +392,202 @@ class FirebaseService:
         
         print(f"✅ Generated slug: '{slug}' for restaurant: '{name}'")
         return slug
+    
+    def create_test_restaurant(self):
+        """Create a test restaurant for development purposes"""
+        if not self.firestore_db:
+            print("❌ Firestore DB not available")
+            return False
+        
+        try:
+            test_data = {
+                'name': 'Lezzet Durağı',
+                'description': 'Geleneksel Türk mutfağının en seçkin lezzetlerini sunan premium restoran',
+                'cuisineTypes': ['Türk Mutfağı'],
+                'tags': ['geleneksel', 'premium', 'aile dostu'],
+                'phone': '+90 216 555 0123',
+                'email': 'info@lezzetduragi.com',
+                'website': 'www.lezzetduragi.com',
+                'address': 'Bağdat Caddesi No: 156, Kadıköy, İstanbul',
+                'hours': {'open': '12:00', 'close': '23:00'},
+                'isActive': True,
+                'featured': True
+            }
+            
+            result = self.create_restaurant(test_data)
+            if result:
+                print("✅ Test restaurant created successfully")
+                
+                # Also create menu data for this restaurant
+                self.create_test_menu('lezzet-dura')
+                
+                return True
+            else:
+                print("❌ Failed to create test restaurant")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error creating test restaurant: {e}")
+            return False
+    
+    def create_test_menu(self, restaurant_slug):
+        """Create test menu data for a restaurant"""
+        if not self.firestore_db:
+            print("❌ Firestore DB not available")
+            return False
+        
+        try:
+            # Different menu for Doydos
+            if restaurant_slug == 'doydos':
+                menu_data = {
+                    'name': 'Doydos Menü',
+                    'description': 'Tost çeşitleri, burger çeşitleri, porsiyon patso, elma dilim patates, kumpir ve menemen seçenekleri.',
+                    'restaurantId': restaurant_slug,
+                    'language': 'tr',
+                    'isActive': True,
+                    'isAIGenerated': {
+                        'description': True,
+                        'name': True
+                    },
+                    'categories': [
+                        {
+                            'name': 'Çorbalar',
+                            'items': [
+                                {
+                                    'name': 'Ezogelin Çorbası',
+                                    'price': '₺28',
+                                    'description': 'Geleneksel ezogelin çorbası, mercimek ve bulgur ile',
+                                    'allergens': ['Gluten'],
+                                    'spice_level': 'Mild'
+                                },
+                                {
+                                    'name': 'Yayla Çorbası',
+                                    'price': '₺26',
+                                    'description': 'Yoğurtlu yayla çorbası, nane ve tereyağı ile',
+                                    'allergens': ['Süt'],
+                                    'spice_level': 'Mild'
+                                }
+                            ]
+                        },
+                        {
+                            'name': 'Pideler',
+                            'items': [
+                                {
+                                    'name': 'Karışık Pide',
+                                    'price': '₺45',
+                                    'description': 'Kaşar peyniri, yumurta ve sucuk ile karışık pide',
+                                    'allergens': ['Gluten', 'Süt'],
+                                    'spice_level': 'Mild'
+                                },
+                                {
+                                    'name': 'Kuşbaşılı Pide',
+                                    'price': '₺55',
+                                    'description': 'Kuşbaşı et, soğan ve maydanoz ile özel pide',
+                                    'allergens': ['Gluten'],
+                                    'spice_level': 'Medium'
+                                }
+                            ]
+                        },
+                        {
+                            'name': 'İçecekler',
+                            'items': [
+                                {
+                                    'name': 'Ayran',
+                                    'price': '₺8',
+                                    'description': 'Taze ev yapımı ayran',
+                                    'allergens': ['Süt'],
+                                    'spice_level': 'Mild'
+                                },
+                                {
+                                    'name': 'Şalgam Suyu',
+                                    'price': '₺6',
+                                    'description': 'Geleneksel şalgam suyu',
+                                    'allergens': [],
+                                    'spice_level': 'Mild'
+                                }
+                            ]
+                        }
+                    ],
+                    'createdAt': firestore.SERVER_TIMESTAMP,
+                    'updatedAt': firestore.SERVER_TIMESTAMP
+                }
+            else:
+                # Default menu for other restaurants
+                menu_data = {
+                    'name': 'Lezzet Durağı Menü',
+                    'description': 'Geleneksel Türk mutfağının en seçkin lezzetleri',
+                    'restaurantId': restaurant_slug,
+                    'language': 'tr',
+                    'isActive': True,
+                    'isAIGenerated': {
+                        'description': True,
+                        'name': True
+                    },
+                    'categories': [
+                        {
+                            'name': 'Başlangıçlar',
+                            'items': [
+                                {
+                                    'name': 'Mercimek Çorbası',
+                                    'price': '₺25',
+                                    'description': 'Geleneksel Türk mutfağının vazgeçilmezi, sıcak mercimek çorbası',
+                                    'allergens': ['Gluten'],
+                                    'spice_level': 'Mild'
+                                },
+                                {
+                                    'name': 'Humus',
+                                    'price': '₺30',
+                                    'description': 'Nohut püresi, tahin ve zeytinyağı ile hazırlanmış',
+                                    'allergens': ['Sesam'],
+                                    'spice_level': 'Mild'
+                                }
+                            ]
+                        },
+                        {
+                            'name': 'Ana Yemekler',
+                            'items': [
+                                {
+                                    'name': 'Izgara Köfte',
+                                    'price': '₺85',
+                                    'description': 'Özel baharatlarla hazırlanmış, ızgara edilmiş dana köfte',
+                                    'allergens': [],
+                                    'spice_level': 'Medium'
+                                },
+                                {
+                                    'name': 'Tavuk Şiş',
+                                    'price': '₺75',
+                                    'description': 'Marine edilmiş tavuk eti, sebzelerle birlikte',
+                                    'allergens': [],
+                                    'spice_level': 'Mild'
+                                }
+                            ]
+                        },
+                        {
+                            'name': 'Tatlılar',
+                            'items': [
+                                {
+                                    'name': 'Künefe',
+                                    'price': '₺45',
+                                    'description': 'Geleneksel Türk tatlısı, peynirli künefe',
+                                    'allergens': ['Gluten', 'Süt'],
+                                    'spice_level': 'Sweet'
+                                }
+                            ]
+                        }
+                    ],
+                    'createdAt': firestore.SERVER_TIMESTAMP,
+                    'updatedAt': firestore.SERVER_TIMESTAMP
+                }
+            
+            # Save menu to Firestore with auto-generated ID
+            doc_ref = self.firestore_db.collection('menus').document()
+            doc_ref.set(menu_data)
+            print(f"✅ Test menu created successfully for restaurant: {restaurant_slug} with ID: {doc_ref.id}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error creating test menu: {e}")
+            return False
     
     def _slug_exists(self, slug):
         """Check if restaurant slug already exists"""
@@ -787,103 +1098,44 @@ class FirebaseService:
     
     # Firestore Database Operations
     def save_chat_message(self, user_id, question, answer, timestamp=None):
-        """Save chat message to Firestore with usage tracking"""
+        """Update daily message count in messages_limits collection (no chat history)"""
         if not self.firestore_db:
             return False
         
         try:
-            if timestamp is None:
-                timestamp = firestore.SERVER_TIMESTAMP
-            
             # Get current date for daily tracking
             from datetime import datetime
             current_date = datetime.now().strftime('%Y-%m-%d')
             
-            # Save chat message
-            chat_ref = self.firestore_db.collection('chat_history')
-            chat_ref.add({
-                'user_id': user_id,
-                'question': question,
-                'answer': answer,
-                'timestamp': timestamp,
-                'restaurant_id': 'lezzet-duragi',
-                'date': current_date
-            })
-            
-            # Update user usage statistics
+            # Update user usage statistics (increment count by 1)
             self._update_user_usage(user_id, current_date)
-            
-            # Keep only last 5 messages per user
-            self._cleanup_old_messages(user_id)
             
             return True
         except Exception as e:
-            print(f"Failed to save chat message: {e}")
+            print(f"Failed to update message count: {e}")
             return False
     
     def _update_user_usage(self, user_id, current_date):
-        """Update user's daily and restaurant usage statistics"""
+        """Update user's daily usage statistics in messages_limits collection"""
         try:
-            # Update daily usage
-            daily_usage_ref = self.firestore_db.collection('user_daily_usage').document(f"{user_id}_{current_date}")
-            daily_usage_ref.set({
+            # Update daily usage in messages_limits collection
+            limit_ref = self.firestore_db.collection('messages_limits').document(f"{user_id}_{current_date}")
+            limit_ref.set({
                 'user_id': user_id,
                 'date': current_date,
-                'total_messages': firestore.Increment(1),
-                'last_updated': firestore.SERVER_TIMESTAMP
-            }, merge=True)
-            
-            # Update restaurant usage
-            restaurant_usage_ref = self.firestore_db.collection('user_restaurant_usage').document(f"{user_id}_lezzet-duragi")
-            restaurant_usage_ref.set({
-                'user_id': user_id,
-                'restaurant_id': 'lezzet-duragi',
-                'total_messages': firestore.Increment(1),
+                'count': firestore.Increment(1),
                 'last_updated': firestore.SERVER_TIMESTAMP
             }, merge=True)
             
         except Exception as e:
             print(f"Failed to update user usage: {e}")
     
-    def _cleanup_old_messages(self, user_id):
-        """Keep only last 5 messages per user"""
-        try:
-            chat_ref = self.firestore_db.collection('chat_history')
-            query = chat_ref.where('user_id', '==', user_id).order_by('timestamp', direction=firestore.Query.DESCENDING)
-            docs = query.stream()
-            
-            messages = []
-            for doc in docs:
-                messages.append((doc.id, doc.to_dict()))
-            
-            # If more than 5 messages, delete the oldest ones
-            if len(messages) > 5:
-                for doc_id, _ in messages[5:]:
-                    chat_ref.document(doc_id).delete()
-                    
-        except Exception as e:
-            print(f"Failed to cleanup old messages: {e}")
+    # _cleanup_old_messages method removed - no chat history needed
     
     def get_user_chat_history(self, user_id, limit=10):
-        """Get user's chat history from Firestore"""
-        if not self.firestore_db:
-            return []
-        
-        try:
-            chat_ref = self.firestore_db.collection('chat_history')
-            query = chat_ref.where('user_id', '==', user_id).order_by('timestamp', direction=firestore.Query.DESCENDING).limit(limit)
-            docs = query.stream()
-            
-            chat_history = []
-            for doc in docs:
-                data = doc.to_dict()
-                data['id'] = doc.id
-                chat_history.append(data)
-            
-            return chat_history
-        except Exception as e:
-            print(f"Failed to get chat history: {e}")
-            return []
+        """Get user's chat history - now returns empty list (no chat history stored)"""
+        # Chat history is no longer stored, return empty list
+        return []
     
     def save_user_preferences(self, user_id, preferences):
         """Save user preferences to Firestore"""
@@ -957,7 +1209,7 @@ class FirebaseService:
             return []
     
     def check_user_limits(self, user_id):
-        """Check if user has exceeded message limits"""
+        """Check if user has exceeded daily message limit (10 messages per day)"""
         if not self.firestore_db:
             return {'can_send': False, 'reason': 'Database not available'}
         
@@ -965,46 +1217,26 @@ class FirebaseService:
             from datetime import datetime
             current_date = datetime.now().strftime('%Y-%m-%d')
             
-            # Check daily limit (10 messages per day)
-            daily_usage_ref = self.firestore_db.collection('user_daily_usage').document(f"{user_id}_{current_date}")
-            daily_doc = daily_usage_ref.get()
-            daily_messages = daily_doc.to_dict().get('total_messages', 0) if daily_doc.exists else 0
+            # Check daily limit (10 messages per day) from messages_limits collection
+            limit_ref = self.firestore_db.collection('messages_limits').document(f"{user_id}_{current_date}")
+            limit_doc = limit_ref.get()
+            daily_messages = limit_doc.to_dict().get('count', 0) if limit_doc.exists else 0
             
-            # Check restaurant limit (5 messages per restaurant per day)
-            restaurant_usage_ref = self.firestore_db.collection('user_restaurant_usage').document(f"{user_id}_lezzet-duragi")
-            restaurant_doc = restaurant_usage_ref.get()
-            restaurant_messages = restaurant_doc.to_dict().get('total_messages', 0) if restaurant_doc.exists else 0
-            
-            # Check limits
+            # Check limit
             daily_limit = 10
-            restaurant_limit = 5
             
             if daily_messages >= daily_limit:
                 return {
                     'can_send': False,
                     'reason': 'Günlük mesaj limitiniz doldu (10 mesaj)',
                     'daily_used': daily_messages,
-                    'daily_limit': daily_limit,
-                    'restaurant_used': restaurant_messages,
-                    'restaurant_limit': restaurant_limit
-                }
-            
-            if restaurant_messages >= restaurant_limit:
-                return {
-                    'can_send': False,
-                    'reason': 'Bu restoran için mesaj limitiniz doldu (5 mesaj)',
-                    'daily_used': daily_messages,
-                    'daily_limit': daily_limit,
-                    'restaurant_used': restaurant_messages,
-                    'restaurant_limit': restaurant_limit
+                    'daily_limit': daily_limit
                 }
             
             return {
                 'can_send': True,
                 'daily_used': daily_messages,
-                'daily_limit': daily_limit,
-                'restaurant_used': restaurant_messages,
-                'restaurant_limit': restaurant_limit
+                'daily_limit': daily_limit
             }
             
         except Exception as e:
@@ -1012,7 +1244,7 @@ class FirebaseService:
             return {'can_send': False, 'reason': 'Limit kontrolü yapılamadı'}
     
     def get_user_usage_stats(self, user_id):
-        """Get user's current usage statistics"""
+        """Get user's current daily usage statistics from messages_limits collection"""
         if not self.firestore_db:
             return {}
         
@@ -1020,23 +1252,15 @@ class FirebaseService:
             from datetime import datetime
             current_date = datetime.now().strftime('%Y-%m-%d')
             
-            # Get daily usage
-            daily_usage_ref = self.firestore_db.collection('user_daily_usage').document(f"{user_id}_{current_date}")
-            daily_doc = daily_usage_ref.get()
-            daily_messages = daily_doc.to_dict().get('total_messages', 0) if daily_doc.exists else 0
-            
-            # Get restaurant usage
-            restaurant_usage_ref = self.firestore_db.collection('user_restaurant_usage').document(f"{user_id}_lezzet-duragi")
-            restaurant_doc = restaurant_usage_ref.get()
-            restaurant_messages = restaurant_doc.to_dict().get('total_messages', 0) if restaurant_doc.exists else 0
+            # Get daily usage from messages_limits collection
+            limit_ref = self.firestore_db.collection('messages_limits').document(f"{user_id}_{current_date}")
+            limit_doc = limit_ref.get()
+            daily_messages = limit_doc.to_dict().get('count', 0) if limit_doc.exists else 0
             
             return {
                 'daily_used': daily_messages,
                 'daily_limit': 10,
-                'restaurant_used': restaurant_messages,
-                'restaurant_limit': 5,
-                'daily_remaining': 10 - daily_messages,
-                'restaurant_remaining': 5 - restaurant_messages
+                'daily_remaining': 10 - daily_messages
             }
             
         except Exception as e:

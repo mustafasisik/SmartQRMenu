@@ -35,13 +35,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Restaurant verilerini yükle
-def load_restaurant_data():
-    try:
-        with open('restaurant.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return None
+
 
 @app.route('/')
 def index():
@@ -51,12 +45,151 @@ def index():
 def health_check():
     return jsonify({'status': 'healthy', 'message': 'Flask app is running!'})
 
-@app.route('/restaurant')
-def restaurant():
-    restaurant_data = load_restaurant_data()
-    if not restaurant_data:
+@app.route('/api/featured-restaurants')
+def get_featured_restaurants():
+    """Get featured restaurants for homepage"""
+    try:
+        featured_restaurants = firebase_service.get_featured_restaurants()
+        return jsonify({
+            'restaurants': featured_restaurants,
+            'count': len(featured_restaurants)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/restaurants/<restaurant_slug>/menu')
+def get_restaurant_menu(restaurant_slug):
+    """Get restaurant menu by slug"""
+    try:
+        print(f"🍽️ Menu request for restaurant: {restaurant_slug}")
+        menu_data = firebase_service.get_restaurant_menu(restaurant_slug)
+        
+        if menu_data and isinstance(menu_data, dict):
+            categories_count = len(menu_data.get('categories', []))
+            print(f"📋 Menu data retrieved: {categories_count} categories")
+            print(f"📋 Menu name: {menu_data.get('name', 'Unknown')}")
+            print(f"📋 Menu description: {menu_data.get('description', 'No description')}")
+        else:
+            print(f"📋 Menu data retrieved: 0 categories")
+        
+        response_data = {
+            'restaurant_slug': restaurant_slug,
+            'menu': menu_data
+        }
+        print(f"📤 Sending menu response: {response_data}")
+        return jsonify(response_data)
+    except Exception as e:
+        print(f"❌ Error getting restaurant menu: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/chat', methods=['POST'])
+@login_required
+def chat_with_ai():
+    """Chat with AI garson"""
+    try:
+        data = request.get_json()
+        if not data or 'question' not in data:
+            return jsonify({'error': 'Question required'}), 400
+        
+        question = data['question']
+        if len(question) > 150:
+            return jsonify({'error': 'Question too long'}), 400
+        
+        # Get restaurant context from session or request
+        restaurant_slug = session.get('current_restaurant_slug')
+        if not restaurant_slug:
+            return jsonify({'error': 'Restaurant context not found'}), 400
+        
+        # Get restaurant data for context
+        restaurant = firebase_service.get_restaurant_by_slug(restaurant_slug)
+        if not restaurant:
+            return jsonify({'error': 'Restaurant not found'}), 400
+        
+        # Get additional context from frontend
+        frontend_context = data.get('context', '')
+        restaurant_info = data.get('restaurant_info', '')
+        
+        # Create enhanced context for AI
+        context = f"""
+        Sen bu restoranın garsonusun ve müşterilerin sorularına cevap veriyorsun.
+        Cevapların 2-3 cümleyi geçmemeli ve Türkçe olmalı.
+        
+        Restoran Bilgileri:
+        - İsim: {restaurant.get('name', 'Bilinmiyor')}
+        - Açıklama: {restaurant.get('description', 'Bilinmiyor')}
+        - Mutfak Türü: {', '.join(restaurant.get('cuisineTypes', []))}
+        - Etiketler: {', '.join(restaurant.get('tags', []))}
+        - Telefon: {restaurant.get('phone', 'Bilinmiyor')}
+        - Email: {restaurant.get('email', 'Bilinmiyor')}
+        - Website: {restaurant.get('website', 'Bilinmiyor')}
+        - Adres: {restaurant.get('address', 'Bilinmiyor')}
+        - Çalışma Saatleri: {restaurant.get('hours', {}).get('open', 'Bilinmiyor')} - {restaurant.get('hours', {}).get('close', 'Bilinmiyor')}
+        
+        {frontend_context}
+        
+        {restaurant_info}
+        
+        Müşteri Sorusu: {question}
+        
+        Lütfen menü içeriğini ve restoran bilgilerini kullanarak detaylı ve yardımcı cevaplar ver.
+        """
+        
+        # Use Gemini AI service to get response
+        if firebase_service.gemini_service and firebase_service.gemini_service.is_available:
+            try:
+                response = firebase_service.gemini_service.get_response(context)
+                
+                # Save chat message to Firestore
+                print(f"💾 Saving chat message for user {session.get('user_id')}")
+                save_result = firebase_service.save_chat_message(session.get('user_id'), question, response)
+                print(f"💾 Save result: {save_result}")
+                
+                # Get updated usage stats
+                print(f"📊 Getting updated usage stats for user {session.get('user_id')}")
+                usage_stats = firebase_service.get_user_usage_stats(session.get('user_id'))
+                print(f"📊 Updated usage stats: {usage_stats}")
+                
+                return jsonify({
+                    'answer': response,
+                    'restaurant_slug': restaurant_slug,
+                    'usage_stats': usage_stats
+                })
+            except Exception as ai_error:
+                print(f"AI service error: {ai_error}")
+                # Fallback response
+                return jsonify({
+                    'answer': 'Üzgünüm, şu anda AI servisimiz meşgul. Lütfen daha sonra tekrar deneyin.',
+                    'restaurant_slug': restaurant_slug
+                })
+        else:
+            # AI service not available
+            return jsonify({
+                'answer': 'Üzgünüm, AI servisimiz şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.',
+                'restaurant_slug': restaurant_slug
+            })
+            
+    except Exception as e:
+        print(f"Chat API error: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/menu/<restaurant_slug>')
+def restaurant_menu(restaurant_slug):
+    """Display restaurant menu page"""
+    try:
+        # Get restaurant data by slug
+        restaurant = firebase_service.get_restaurant_by_slug(restaurant_slug)
+        if not restaurant:
+            return "Restoran bulunamadı", 404
+        
+        # Store restaurant slug in session for AI chat context
+        session['current_restaurant_slug'] = restaurant_slug
+        
+        return render_template('pages/menu.html', restaurant=restaurant)
+    except Exception as e:
+        print(f"Error loading restaurant menu: {e}")
         return "Restoran verileri yüklenemedi", 500
-    return render_template('pages/restaurant.html', data=restaurant_data)
+
+
 
 @app.route('/login')
 def login_page():
@@ -272,28 +405,47 @@ def chat():
                 'success': False
             }), 400
         
-        # Check user limits
+        # Get restaurant slug from session
+        restaurant_slug = session.get('current_restaurant_slug')
+        if not restaurant_slug:
+            return jsonify({'error': 'Restoran bilgisi bulunamadı'}), 400
+        
+        # Check user limits BEFORE processing
         limits = firebase_service.check_user_limits(user_id)
+        print(f"🔍 User limits check: {limits}")
+        
         if not limits['can_send']:
+            print(f"❌ User {user_id} exceeded limits: {limits['reason']}")
             return jsonify({
                 'error': limits['reason'],
                 'limits': limits,
                 'success': False
             }), 429  # Too Many Requests
         
-        restaurant_data = load_restaurant_data()
-        if not restaurant_data:
-            return jsonify({'error': 'Restoran verileri yüklenemedi'}), 500
+        # Get restaurant data
+        restaurant = firebase_service.get_restaurant_by_slug(restaurant_slug)
+        if not restaurant:
+            return jsonify({'error': 'Restoran bulunamadı'}), 500
         
-        # Get AI response
-        response = gemini_service.ask_question(question, restaurant_data)
+        # Get chat history for context
+        chat_history = firebase_service.get_user_chat_history(user_id, limit=10)
+        
+        # Get current usage stats
+        current_usage_stats = firebase_service.get_user_usage_stats(user_id, restaurant_slug)
+        
+        # Get AI response with context
+        response = gemini_service.ask_question(question, restaurant, chat_history, current_usage_stats)
         
         if response['success']:
+            print(f"💾 Saving chat message for user {user_id}")
             # Save chat message to Firestore
-            firebase_service.save_chat_message(user_id, question, response['answer'])
+            save_result = firebase_service.save_chat_message(user_id, question, response['answer'])
+            print(f"💾 Save result: {save_result}")
             
             # Get updated usage stats
+            print(f"📊 Getting updated usage stats for user {user_id}")
             usage_stats = firebase_service.get_user_usage_stats(user_id)
+            print(f"📊 Updated usage stats: {usage_stats}")
             
             return jsonify({
                 'answer': response['answer'],

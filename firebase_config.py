@@ -126,23 +126,24 @@ class FirebaseService:
     def get_user_role(self, uid):
         """Get user role from Firestore"""
         if not self.firestore_db:
+            print(f"❌ Firestore DB not available for role check for user: {uid}")
             return 'subscriber'  # Default role
         
         try:
-            # Check if user is admin (hardcoded for now)
-            if uid == 'XeM2qyCUMsW2PzSFarpM4gDi52':  # mstfssk@gmail.com
-                return 'admin'
             
-            # Get user role from Firestore
+            # Get user role from Firestore users collection
             user_doc = self.firestore_db.collection('users').document(uid).get()
             if user_doc.exists:
                 user_data = user_doc.to_dict()
-                return user_data.get('role', 'subscriber')
-            
-            return 'subscriber'  # Default role
+                role = user_data.get('role', 'subscriber')
+                print(f"✅ User {uid} role from Firestore: {role}")
+                return role
+            else:
+                print(f"⚠️ User {uid} not found in Firestore users collection, using default role: subscriber")
+                return 'subscriber'  # Default role
             
         except Exception as e:
-            print(f"Failed to get user role: {e}")
+            print(f"❌ Failed to get user role for {uid}: {e}")
             return 'subscriber'
     
     def set_user_role(self, uid, role):
@@ -199,6 +200,75 @@ class FirebaseService:
         except Exception as e:
             print(f"Failed to get all users: {e}")
             return []
+    
+    def list_users_with_roles(self):
+        """List all users with their roles for debugging"""
+        if not self.firestore_db:
+            print("❌ Firestore DB not available")
+            return
+        
+        try:
+            print("\n👥 Users in Firestore with roles:")
+            print("=" * 50)
+            
+            users_ref = self.firestore_db.collection('users').stream()
+            user_count = 0
+            
+            for user_doc in users_ref:
+                user_data = user_doc.to_dict()
+                user_count += 1
+                
+                email = user_data.get('email', 'No email')
+                role = user_data.get('role', 'No role')
+                uid = user_doc.id
+                
+                print(f"📧 {email}")
+                print(f"   UID: {uid}")
+                print(f"   Role: {role}")
+                print(f"   Display Name: {user_data.get('display_name', 'No name')}")
+                print("-" * 30)
+            
+            if user_count == 0:
+                print("❌ No users found in Firestore users collection")
+            else:
+                print(f"✅ Found {user_count} users in Firestore")
+                
+        except Exception as e:
+            print(f"❌ Error listing users: {e}")
+    
+    def update_user_role_by_email(self, email, new_role):
+        """Update user role by email address"""
+        if not self.firestore_db:
+            print("❌ Firestore DB not available")
+            return False
+        
+        try:
+            # Find user by email
+            users_ref = self.firestore_db.collection('users')
+            query = users_ref.where('email', '==', email)
+            docs = query.stream()
+            
+            user_found = False
+            for doc in docs:
+                user_found = True
+                uid = doc.id
+                
+                # Update role
+                self.firestore_db.collection('users').document(uid).update({
+                    'role': new_role,
+                    'updated_at': firestore.SERVER_TIMESTAMP
+                })
+                
+                print(f"✅ Updated role for {email} to {new_role}")
+                return True
+            
+            if not user_found:
+                print(f"❌ User with email {email} not found in Firestore")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error updating user role: {e}")
+            return False
     
     def get_all_restaurants(self):
         """Get all restaurants from Firestore"""
@@ -643,6 +713,30 @@ class FirebaseService:
         except:
             return None
     
+    def find_user_by_email_in_firestore(self, email):
+        """Find user by email in Firestore users collection"""
+        if not self.firestore_db:
+            return None
+        
+        try:
+            # Query users collection by email
+            users_ref = self.firestore_db.collection('users')
+            query = users_ref.where('email', '==', email)
+            docs = query.stream()
+            
+            for doc in docs:
+                user_data = doc.to_dict()
+                user_data['uid'] = doc.id
+                print(f"✅ Found user in Firestore: {email} -> UID: {doc.id}, Role: {user_data.get('role', 'subscriber')}")
+                return user_data
+            
+            print(f"❌ User not found in Firestore: {email}")
+            return None
+            
+        except Exception as e:
+            print(f"❌ Error finding user by email in Firestore: {e}")
+            return None
+    
     def update_restaurant(self, restaurant_slug, restaurant_data):
         """Update restaurant in Firestore"""
         if not self.firestore_db:
@@ -824,7 +918,6 @@ class FirebaseService:
                 'last_update': last_update
             }
             
-            print(f"✅ Editor stats retrieved for {editor_id}: {stats}")
             return stats
             
         except Exception as e:
@@ -1050,6 +1143,22 @@ class FirebaseService:
                 user_properties['display_name'] = display_name
             
             user = auth.create_user(**user_properties)
+            
+            # Create user document in Firestore users collection
+            if self.firestore_db:
+                try:
+                    user_doc = {
+                        'email': user.email,
+                        'display_name': user.display_name,
+                        'role': 'subscriber',  # Default role
+                        'created_at': firestore.SERVER_TIMESTAMP,
+                        'updated_at': firestore.SERVER_TIMESTAMP
+                    }
+                    self.firestore_db.collection('users').document(user.uid).set(user_doc)
+                    print(f"✅ User document created in Firestore for {user.email}")
+                except Exception as e:
+                    print(f"⚠️ Failed to create user document in Firestore: {e}")
+            
             return {
                 'uid': user.uid,
                 'email': user.email,
@@ -1275,6 +1384,36 @@ class FirebaseService:
         except Exception as e:
             print(f"Failed to verify ID token: {e}")
             return None
+    
+    def ensure_user_document_exists(self, uid, email, display_name=None):
+        """Ensure user document exists in Firestore users collection"""
+        if not self.firestore_db:
+            print("❌ Firestore DB not available for user document creation")
+            return False
+        
+        try:
+            # Check if user document already exists
+            user_doc = self.firestore_db.collection('users').document(uid).get()
+            
+            if not user_doc.exists:
+                # Create user document
+                user_data = {
+                    'email': email,
+                    'display_name': display_name or '',
+                    'role': 'subscriber',  # Default role
+                    'created_at': firestore.SERVER_TIMESTAMP,
+                    'updated_at': firestore.SERVER_TIMESTAMP
+                }
+                self.firestore_db.collection('users').document(uid).set(user_data)
+                print(f"✅ User document created in Firestore for {email}")
+                return True
+            else:
+                print(f"✅ User document already exists in Firestore for {email}")
+                return True
+                
+        except Exception as e:
+            print(f"❌ Failed to ensure user document exists: {e}")
+            return False
     
     def get_status(self):
         """Get Firebase service status"""

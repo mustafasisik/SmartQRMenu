@@ -190,6 +190,13 @@ def api_login():
         decoded_token = firebase_service.verify_id_token(data['id_token'])
         
         if decoded_token:
+            # Ensure user document exists in Firestore
+            firebase_service.ensure_user_document_exists(
+                decoded_token['uid'],
+                decoded_token.get('email', ''),
+                decoded_token.get('name', '')
+            )
+            
             # Store user info in session
             session['user_id'] = decoded_token['uid']
             session['user_email'] = decoded_token.get('email', '')
@@ -229,6 +236,13 @@ def api_register():
         # Verify the ID token with Firebase
         decoded_token = firebase_service.verify_id_token(data['id_token'])
         if decoded_token:
+            # Ensure user document exists in Firestore
+            firebase_service.ensure_user_document_exists(
+                decoded_token['uid'],
+                decoded_token.get('email', ''),
+                decoded_token.get('name', '')
+            )
+            
             # Store user info in session
             session['user_id'] = decoded_token['uid']
             session['user_email'] = decoded_token.get('email', '')
@@ -269,7 +283,7 @@ def admin_panel():
     user_info = firebase_service.get_user_by_uid(user_id)
     
     if not user_info or user_info.get('role') != 'admin':
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     
     return render_template('admin/dashboard.html', user=user_info)
 
@@ -281,7 +295,7 @@ def admin_users():
     user_info = firebase_service.get_user_by_uid(user_id)
     
     if not user_info or user_info.get('role') != 'admin':
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     
     return render_template('admin/users.html', user=user_info)
 
@@ -293,7 +307,7 @@ def admin_restaurants():
     user_info = firebase_service.get_user_by_uid(user_id)
     
     if not user_info or user_info.get('role') != 'admin':
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     
     return render_template('admin/restaurants.html', user=user_info)
 
@@ -305,7 +319,7 @@ def admin_cuisines():
     user_info = firebase_service.get_user_by_uid(user_id)
     
     if not user_info or user_info.get('role') != 'admin':
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     
     return render_template('admin/cuisines.html', user=user_info)
 
@@ -318,7 +332,7 @@ def editor_dashboard():
     user_info = firebase_service.get_user_by_uid(user_id)
     
     if not user_info or user_info.get('role') not in ['editor', 'admin']:
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     
     return render_template('editor/dashboard.html', user=user_info)
 
@@ -456,6 +470,13 @@ def verify_token():
         decoded_token = firebase_service.verify_token(id_token)
         
         if decoded_token:
+            # Ensure user document exists in Firestore
+            firebase_service.ensure_user_document_exists(
+                decoded_token['uid'],
+                decoded_token.get('email', ''),
+                decoded_token.get('name', '')
+            )
+            
             # Store user info in session
             session['user_id'] = decoded_token['uid']
             session['user_email'] = decoded_token.get('email', '')
@@ -488,12 +509,18 @@ def auth_status():
     
     if 'user_id' in session:
         user_id = session['user_id']
+        user_email = session.get('user_email', '')
         print(f"✅ User ID in session: {user_id}")
+        print(f"📧 User email in session: {user_email}")
         
-        # Get user info from Firebase
+        # Get user info from Firebase (includes role from Firestore users collection)
         user_info = firebase_service.get_user_by_uid(user_id)
         
         if user_info:
+            user_role = user_info.get('role', 'subscriber')
+            print(f"🔐 User role from Firestore: {user_role}")
+            print(f"📧 User email from service: {user_info.get('email', '')}")
+            
             response_data = {
                 'authenticated': True,
                 'user_id': user_id,
@@ -502,13 +529,14 @@ def auth_status():
                     'email': user_info.get('email', ''),
                     'display_name': user_info.get('display_name', ''),
                     'photo_url': user_info.get('photo_url', ''),
-                    'role': user_info.get('role', 'subscriber')
+                    'role': user_role
                 }
             }
-            print(f"🎯 Returning Firebase user data: {response_data}")
+            print(f"📤 Auth status response: {response_data}")
             return jsonify(response_data)
         else:
             # Fallback to session data
+            print("⚠️ User info not found in Firebase, using session fallback")
             response_data = {
                 'authenticated': True,
                 'user_id': user_id,
@@ -532,6 +560,108 @@ def auth_status():
 def firebase_status():
     """Get Firebase service status"""
     return jsonify(firebase_service.get_status())
+
+@app.route('/api/user/role', methods=['GET', 'POST'])
+@login_required
+def user_role():
+    """Get or update user role (admin only for updates)"""
+    user_id = session.get('user_id')
+    current_user = firebase_service.get_user_by_uid(user_id)
+    
+    if request.method == 'GET':
+        return jsonify({
+            'success': True,
+            'role': current_user.get('role', 'subscriber') if current_user else 'subscriber'
+        })
+    
+    elif request.method == 'POST':
+        # Only admins can update roles
+        if not current_user or current_user.get('role') != 'admin':
+            return jsonify({'error': 'Admin access required'}), 403
+        
+        try:
+            data = request.get_json()
+            target_user_id = data.get('user_id')
+            new_role = data.get('role')
+            
+            if not target_user_id or not new_role:
+                return jsonify({'error': 'user_id and role required'}), 400
+            
+            # Validate role
+            valid_roles = ['admin', 'editor', 'owner', 'subscriber']
+            if new_role not in valid_roles:
+                return jsonify({'error': f'Invalid role. Must be one of: {valid_roles}'}), 400
+            
+            # Update user role
+            if firebase_service.set_user_role(target_user_id, new_role):
+                return jsonify({
+                    'success': True,
+                    'message': f'User role updated to {new_role}'
+                })
+            else:
+                return jsonify({'error': 'Failed to update user role'}), 500
+                
+        except Exception as e:
+            return jsonify({'error': f'Error updating role: {str(e)}'}), 500
+
+@app.route('/api/debug/user-info')
+@login_required
+def debug_user_info():
+    """Debug endpoint to check user information and role"""
+    user_id = session.get('user_id')
+    user_email = session.get('user_email')
+    
+    # Get user info from Firebase Auth
+    auth_user = None
+    if user_email:
+        auth_user = firebase_service._find_user_by_email(user_email)
+    
+    # Get user info from Firestore
+    firestore_user = None
+    if user_email:
+        firestore_user = firebase_service.find_user_by_email_in_firestore(user_email)
+    
+    # Get user info from our service
+    service_user = firebase_service.get_user_by_uid(user_id)
+    
+    return jsonify({
+        'session': {
+            'user_id': user_id,
+            'user_email': user_email
+        },
+        'auth_user': auth_user,
+        'firestore_user': firestore_user,
+        'service_user': service_user,
+        'role_from_service': service_user.get('role', 'subscriber') if service_user else 'subscriber'
+    })
+
+@app.route('/api/debug/users')
+@login_required
+def debug_users():
+    """Debug endpoint to list all users and their roles (admin only)"""
+    user_id = session.get('user_id')
+    current_user = firebase_service.get_user_by_uid(user_id)
+    
+    # Only admins can see all users
+    if not current_user or current_user.get('role') != 'admin':
+        return jsonify({'error': 'Admin access required'}), 403
+    
+    # List all users with roles
+    firebase_service.list_users_with_roles()
+    
+    # Get all users data
+    users = firebase_service.get_all_users()
+    
+    return jsonify({
+        'success': True,
+        'users': users,
+        'count': len(users)
+    })
+
+@app.route('/test-roles')
+def test_roles_page():
+    """Test page to check role-based navigation"""
+    return render_template('pages/test_roles.html')
 
 @app.route('/api/chat/history')
 @login_required

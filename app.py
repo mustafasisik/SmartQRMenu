@@ -2,12 +2,19 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 import os
 import json
 from config import Config
-from gemini_service import GeminiAIService
+from rag_service import RestaurantRAGService
 from firebase_config import firebase_service
 from functools import wraps
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = Config.SECRET_KEY
+
+# Production behind HTTPS proxy (Render, Cloud Run, etc.)
+if os.environ.get('RENDER') or os.environ.get('K_SERVICE'):
+    app.config['SESSION_COOKIE_SECURE'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 # Make Firebase config available to all templates
 @app.context_processor
@@ -23,8 +30,8 @@ def inject_firebase_config():
         }
     }
 
-# Initialize Gemini AI service
-gemini_service = GeminiAIService()
+# Initialize RAG service (Groq + Pinecone menu search)
+ai_service = RestaurantRAGService()
 
 # Authentication decorator
 def login_required(f):
@@ -98,58 +105,49 @@ def chat_with_ai():
         frontend_context = data.get('context', '')
         restaurant_info = data.get('restaurant_info', '')
         
-        # Create enhanced context for AI
-        context = f"""
-        Sen bu restoranın garsonusun ve müşterilerin sorularına cevap veriyorsun.
-        Cevapların 2-3 cümleyi geçmemeli ve Türkçe olmalı.
-        
-        Restoran Bilgileri:
-        - İsim: {restaurant.get('name', 'Bilinmiyor')}
-        - Açıklama: {restaurant.get('description', 'Bilinmiyor')}
-        - Mutfak Türü: {', '.join(restaurant.get('cuisineTypes', []))}
-        - Etiketler: {', '.join(restaurant.get('tags', []))}
-        - Telefon: {restaurant.get('phone', 'Bilinmiyor')}
-        - Email: {restaurant.get('email', 'Bilinmiyor')}
-        - Website: {restaurant.get('website', 'Bilinmiyor')}
-        - Adres: {restaurant.get('address', 'Bilinmiyor')}
-        - Çalışma Saatleri: {restaurant.get('hours', {}).get('open', 'Bilinmiyor')} - {restaurant.get('hours', {}).get('close', 'Bilinmiyor')}
-        
-        {frontend_context}
-        
-        {restaurant_info}
-        
-        Müşteri Sorusu: {question}
-        
-        Lütfen menü içeriğini ve restoran bilgilerini kullanarak detaylı ve yardımcı cevaplar ver.
-        """
-        
-        # Use Gemini AI service to get response
-        if firebase_service.gemini_service and firebase_service.gemini_service.is_available:
+        restaurant['id'] = restaurant_slug
+        restaurant['slug'] = restaurant_slug
+
+        service = firebase_service.ai_service or ai_service
+        if service and service.is_available:
             try:
-                response = firebase_service.gemini_service.get_response(context)
-                
-                # Save chat message to Firestore
-                save_result = firebase_service.save_chat_message(session.get('user_id'), question, response)
-                
-                # Get updated usage stats
                 usage_stats = firebase_service.get_user_usage_stats(session.get('user_id'))
-                
+                extra = f"\n{frontend_context}\n{restaurant_info}".strip()
+                full_question = f"{question}\n{extra}" if extra else question
+
+                result = service.ask_question(
+                    question=full_question,
+                    restaurant_data=restaurant,
+                    get_menu_fn=firebase_service.get_restaurant_menu,
+                    chat_history=[],
+                    usage_stats=usage_stats,
+                )
+
+                if not result.get('success'):
+                    return jsonify({
+                        'answer': result.get('error', 'AI yanıtı alınamadı.'),
+                        'restaurant_slug': restaurant_slug,
+                    }), 500
+
+                response = result['answer']
+                firebase_service.save_chat_message(session.get('user_id'), question, response)
+                usage_stats = firebase_service.get_user_usage_stats(session.get('user_id'))
+
                 return jsonify({
                     'answer': response,
                     'restaurant_slug': restaurant_slug,
-                    'usage_stats': usage_stats
+                    'usage_stats': usage_stats,
+                    'sources': result.get('sources', []),
                 })
-            except Exception as ai_error:
-                # Fallback response
+            except Exception:
                 return jsonify({
                     'answer': 'Üzgünüm, şu anda AI servisimiz meşgul. Lütfen daha sonra tekrar deneyin.',
-                    'restaurant_slug': restaurant_slug
+                    'restaurant_slug': restaurant_slug,
                 })
         else:
-            # AI service not available
             return jsonify({
                 'answer': 'Üzgünüm, AI servisimiz şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.',
-                'restaurant_slug': restaurant_slug
+                'restaurant_slug': restaurant_slug,
             })
             
     except Exception as e:
@@ -422,12 +420,19 @@ def chat():
         # Get chat history for context
         chat_history = firebase_service.get_user_chat_history(user_id, limit=10)
         
-        # Get current usage stats
-        current_usage_stats = firebase_service.get_user_usage_stats(user_id, restaurant_slug)
-        
-        # Get AI response with context
-        response = gemini_service.ask_question(question, restaurant, chat_history, current_usage_stats)
-        
+        restaurant['id'] = restaurant_slug
+        restaurant['slug'] = restaurant_slug
+
+        current_usage_stats = firebase_service.get_user_usage_stats(user_id)
+
+        response = ai_service.ask_question(
+            question=question,
+            restaurant_data=restaurant,
+            get_menu_fn=firebase_service.get_restaurant_menu,
+            chat_history=chat_history,
+            usage_stats=current_usage_stats,
+        )
+
         if response['success']:
             print(f"💾 Saving chat message for user {user_id}")
             # Save chat message to Firestore
@@ -442,7 +447,8 @@ def chat():
             return jsonify({
                 'answer': response['answer'],
                 'success': True,
-                'usage_stats': usage_stats
+                'usage_stats': usage_stats,
+                'sources': response.get('sources', []),
             })
         else:
             return jsonify({
@@ -456,7 +462,7 @@ def chat():
 @app.route('/api/ai-status')
 def ai_status():
     """Get AI service status"""
-    return jsonify(gemini_service.get_status())
+    return jsonify(ai_service.get_status())
 
 @app.route('/api/auth/verify', methods=['POST'])
 def verify_token():
@@ -1109,11 +1115,45 @@ def editor_delete_restaurant(restaurant_slug):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/menu/index/<restaurant_slug>', methods=['POST'])
+@login_required
+def index_restaurant_menu(restaurant_slug):
+    """Sync restaurant menu from Firestore into Pinecone vector index."""
+    user_id = session.get('user_id')
+    user_info = firebase_service.get_user_by_uid(user_id)
+    role = (user_info or {}).get('role', 'subscriber')
+
+    if role not in ('admin', 'editor', 'owner'):
+        if not firebase_service.can_editor_edit_restaurant(user_id, restaurant_slug):
+            return jsonify({'error': 'Unauthorized'}), 403
+
+    force = request.get_json(silent=True) or {}
+    force_reindex = bool(force.get('force', False))
+
+    result = ai_service.sync_menu_from_firestore(
+        restaurant_slug,
+        firebase_service.get_restaurant_menu,
+        force=force_reindex,
+    )
+    status_code = 200 if result.get('success') else 400
+    return jsonify(result), status_code
+
+
+@app.route('/api/menu/index-status/<restaurant_slug>')
+@login_required
+def menu_index_status(restaurant_slug):
+    """Return Pinecone + Groq service status for debugging."""
+    return jsonify({
+        'ai': ai_service.get_status(),
+        'restaurant_slug': restaurant_slug,
+    })
+
+
 # AI Image Analysis API Endpoint
 @app.route('/api/ai/analyze-menu-image', methods=['POST'])
 @login_required
 def analyze_menu_image():
-    """Analyze menu image using Gemini AI"""
+    """Analyze menu image using Groq vision"""
     try:
         data = request.get_json()
         image_base64 = data.get('image')
@@ -1122,8 +1162,7 @@ def analyze_menu_image():
         if not image_base64:
             return jsonify({'error': 'Image data is required'}), 400
         
-        # Analyze image with Gemini AI
-        suggestions = gemini_service.analyze_menu_image(image_base64, language)
+        suggestions = ai_service.analyze_menu_image(image_base64, language)
         
         print(f"🔍 AI analysis result: {suggestions}")
         
@@ -1137,8 +1176,8 @@ def analyze_menu_image():
 def test_ai():
     """Test if AI service is working"""
     try:
-        status = gemini_service.get_status()
-        basic_test = gemini_service.test_basic_functionality()
+        status = ai_service.get_status()
+        basic_test = ai_service.test_basic_functionality()
         
         return jsonify({
             'success': True,
@@ -1186,6 +1225,13 @@ def editor_create_menu():
             return jsonify({'error': 'Unauthorized to create menu for this restaurant'}), 403
         
         menu_id = firebase_service.create_menu(data)
+        restaurant_id = data.get('restaurantId')
+        if restaurant_id:
+            ai_service.sync_menu_from_firestore(
+                restaurant_id,
+                firebase_service.get_restaurant_menu,
+                force=True,
+            )
         return jsonify({'message': 'Menu created successfully', 'id': menu_id})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -1208,6 +1254,13 @@ def editor_update_menu(menu_id):
         data = request.get_json()
         success = firebase_service.update_menu(menu_id, data)
         if success:
+            restaurant_id = data.get('restaurantId')
+            if restaurant_id:
+                ai_service.sync_menu_from_firestore(
+                    restaurant_id,
+                    firebase_service.get_restaurant_menu,
+                    force=True,
+                )
             return jsonify({'message': 'Menu updated successfully'})
         else:
             return jsonify({'error': 'Failed to update menu'}), 500
@@ -1262,11 +1315,16 @@ if __name__ == '__main__':
     Config.validate_config()
     
     # Show AI service status
-    ai_status = gemini_service.get_status()
-    if ai_status['available']:
-        print(f"🚀 Gemini AI hazır! Model: {ai_status['model']}")
+    ai_status = ai_service.get_status()
+    if ai_status.get('available'):
+        groq = ai_status.get('groq', {})
+        pinecone = ai_status.get('pinecone', {})
+        print(
+            f"🚀 AI RAG hazır! Groq={groq.get('chat_model')}, "
+            f"Pinecone={pinecone.get('index_name')}"
+        )
     else:
-        print("⚠️ Gemini AI devre dışı. GEMINI_API_KEY ayarlayın.")
+        print("⚠️ AI devre dışı. GROQ_API_KEY ve PINECONE_API_KEY ayarlayın.")
     
     # Show Firebase service status
     firebase_status = firebase_service.get_status()
@@ -1275,4 +1333,6 @@ if __name__ == '__main__':
     else:
         print("⚠️ Firebase devre dışı. Authentication özellikleri sınırlı.")
     
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    port = int(os.environ.get('PORT', 5001))
+    debug = os.environ.get('FLASK_DEBUG', '1') == '1'
+    app.run(debug=debug, host='0.0.0.0', port=port)

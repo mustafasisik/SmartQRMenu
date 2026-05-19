@@ -14,9 +14,10 @@
    - Get your Firebase config from Project Settings
    - Create `.env` file in project root with Firebase config
 
-3. **Set up Gemini AI (optional but recommended):**
-   - Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Add to `.env` file: `GEMINI_API_KEY=your_key_here`
+3. **Set up AI (Groq + Pinecone):**
+   - Groq API key: [console.groq.com](https://console.groq.com/)
+   - Pinecone API key: [app.pinecone.io](https://app.pinecone.io/)
+   - Copy `.env.example` to `.env` and fill in `GROQ_API_KEY` and `PINECONE_API_KEY`
 
 4. **Run the application:**
    ```bash
@@ -34,7 +35,14 @@
 - `FIREBASE_APP_ID`: Your Firebase app ID
 
 ### Required for AI Features
-- `GEMINI_API_KEY`: Your Google Gemini API key
+- `GROQ_API_KEY`: Groq API key (chat + menu image analysis)
+- `PINECONE_API_KEY`: Pinecone API key (menu vector search / RAG)
+
+### Optional AI tuning
+- `GROQ_CHAT_MODEL`: Default `llama-3.3-70b-versatile`
+- `GROQ_VISION_MODEL`: Default `meta-llama/llama-4-scout-17b-16e-instruct`
+- `PINECONE_INDEX_NAME`: Default `smartqrmenu-menus`
+- `RAG_TOP_K`: Number of menu chunks retrieved per question (default `8`)
 
 ### Optional
 - `SECRET_KEY`: Flask secret key (auto-generated if not set)
@@ -45,13 +53,15 @@
 ## File Structure
 
 - `config.py` - Configuration management
-- `gemini_service.py` - Gemini AI integration
+- `groq_service.py` - Groq LLM integration
+- `menu_vector_store.py` - Pinecone menu indexing & search
+- `rag_service.py` - RAG orchestration (Pinecone → Groq)
 - `app.py` - Main Flask application
 - `restaurant.json` - Restaurant data
 
 ## AI Features
 
-The Gemini AI chatbot can answer questions about:
+The AI garson (RAG) searches the menu in Pinecone, then Groq answers about:
 - Restaurant location and contact info
 - Menu items and prices
 - Chef information and experience
@@ -63,7 +73,8 @@ The Gemini AI chatbot can answer questions about:
 
 ### AI Service Not Available
 - Check if `.env` file exists
-- Verify `GEMINI_API_KEY` is set correctly
+- Verify `GROQ_API_KEY` and `PINECONE_API_KEY` are set correctly
+- Re-index menu: `POST /api/menu/index/<restaurant_slug>` with `{"force": true}`
 - Ensure internet connection for API calls
 
 ### Import Errors
@@ -72,7 +83,19 @@ The Gemini AI chatbot can answer questions about:
 
 ## Deployment
 
-The application includes:
-- `render.yaml` for Render.com
-- `Procfile` for Heroku/other platforms
-- `requirements.txt` with compatible versions
+### Render.com (önerilen — ücretsiz, Blaze gerekmez)
+
+**[DEPLOY_RENDER.md](DEPLOY_RENDER.md)**
+
+1. GitHub’a push
+2. Render → Blueprint → `render.yaml`
+3. Environment: `render.env.example` içeriğini dashboard’a yapıştırın
+4. Firebase Auth → Authorized domains → Render URL
+
+### Firebase Hosting + Cloud Run (alternatif)
+
+GCP faturalandırma gerekir: **[DEPLOY_FIREBASE.md](DEPLOY_FIREBASE.md)**
+
+### Diğer
+
+- `Dockerfile` — container deploy

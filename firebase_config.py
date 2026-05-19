@@ -4,7 +4,7 @@ import time
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from config import Config
-from gemini_service import GeminiAIService
+from rag_service import RestaurantRAGService
 
 class FirebaseService:
     """Firebase service for authentication and database operations"""
@@ -76,13 +76,13 @@ class FirebaseService:
             else:
                 print("✅ Firestore DB is available")
             
-            # Initialize Gemini AI service
+            # Initialize RAG service (Groq + Pinecone)
             try:
-                self.gemini_service = GeminiAIService()
-                print("✅ Gemini AI service initialized successfully")
+                self.ai_service = RestaurantRAGService()
+                print("✅ AI RAG service initialized successfully")
             except Exception as ai_error:
-                print(f"⚠️ Gemini AI service initialization failed: {ai_error}")
-                self.gemini_service = None
+                print(f"⚠️ AI RAG service initialization failed: {ai_error}")
+                self.ai_service = None
                 
         except Exception as e:
             print(f"❌ Failed to initialize Firebase: {e}")

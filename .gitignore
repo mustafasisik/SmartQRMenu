@@ -95,6 +95,16 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+public/static/
+
+# Deploy secrets (local only)
+cloud-run.env
+render.env
+
 # Environments
 .env
 .venv

@@ -6,7 +6,7 @@ A simple Flask web application with a modern, responsive UI.
 
 - Clean, modern web interface
 - Restaurant information page with comprehensive details
-- Restaurant page with **Gemini AI chatbot** powered by Google AI
+- Restaurant page with **AI garson** (Groq + Pinecone RAG menu search)
 - **Firebase Authentication** with email/password and Google sign-in
 - **Protected AI chatbot** - requires user authentication
 - Health check API endpoint
@@ -28,20 +28,19 @@ A simple Flask web application with a modern, responsive UI.
 - All dependencies are configured with compatible version ranges
 - Flask 3.1+ with blinker 1.9+ for proper functionality
 - Gunicorn for production deployment
-- Google Generative AI for Gemini AI integration
+- Groq for LLM inference
+- Pinecone for menu vector search (RAG)
 
 ### AI Setup (Optional)
 
-To enable the Gemini AI chatbot:
+To enable the AI garson (RAG):
 
-1. **Get a Gemini API key** from [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. **Create a `.env` file** in the project root:
-   ```bash
-   GEMINI_API_KEY=your_actual_api_key_here
-   ```
-3. **Restart the application** - the AI service will automatically initialize
+1. **Get a Groq API key** from [console.groq.com](https://console.groq.com/)
+2. **Get a Pinecone API key** from [app.pinecone.io](https://app.pinecone.io/)
+3. **Copy `.env.example` to `.env`** and set `GROQ_API_KEY` and `PINECONE_API_KEY`
+4. **Restart the application** — menus are indexed on first chat or via `POST /api/menu/index/<slug>`
 
-**Note**: The application works without the AI key, but the chatbot will be disabled.
+**Note**: Without these keys the chatbot is disabled.
 
 ### Installation
 
@@ -75,26 +74,25 @@ To enable the Gemini AI chatbot:
    http://localhost:5001
    ```
 
-### Deployment on Render.com
+### Deployment on Render.com (önerilen)
 
-1. **Push your code to GitHub/GitLab**
-2. **Connect your repository to Render**
-3. **Create a new Web Service**
-4. **Use the following settings:**
-   - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `gunicorn app:app`
-   - **Environment:** Python 3.11
-5. **Deploy!**
+Ücretsiz plan; GCP Blaze gerekmez. Detay: **[DEPLOY_RENDER.md](DEPLOY_RENDER.md)**
 
-**Deployment Files Included:**
-- `render.yaml` - Automatic deployment configuration
-- `Procfile` - Alternative deployment method
-- `requirements.txt` - Compatible dependency versions
+1. Repo’yu GitHub’a push edin
+2. [Render](https://dashboard.render.com/) → **New** → **Blueprint** → repo
+3. Ortam değişkenlerini doldurun (`render.env.example`)
+4. Firebase → **Authorized domains** → `your-app.onrender.com` ekleyin
+
+**Dosyalar:** `render.yaml`, `Procfile`, `runtime.txt`
+
+### Deployment on Firebase (Hosting + Cloud Run)
+
+GCP faturalandırma gerekir: **[DEPLOY_FIREBASE.md](DEPLOY_FIREBASE.md)**
 
 ## API Endpoints
 
 - `GET /` - Main page
-- `GET /restaurant` - Restaurant page with Gemini AI chatbot (requires authentication)
+- `GET /restaurant` - Restaurant page with AI chatbot (requires authentication)
 - `GET /restaurant-info` - Restaurant information page (menu, reviews, details)
 - `GET /login` - User login page
 - `GET /register` - User registration page
@@ -123,7 +121,9 @@ To enable the Gemini AI chatbot:
 SmartQRMenu/
 ├── app.py                 # Main Flask application
 ├── config.py              # Configuration and environment variables
-├── gemini_service.py      # Gemini AI service integration
+├── groq_service.py        # Groq LLM integration
+├── menu_vector_store.py   # Pinecone menu vector search
+├── rag_service.py         # RAG orchestration
 ├── firebase_config.py     # Firebase authentication service
 ├── restaurant.json        # Restaurant data (Turkish content)
 ├── requirements.txt       # Python dependencies
